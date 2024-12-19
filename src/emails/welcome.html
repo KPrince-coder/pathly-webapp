@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary-50: #F0F7FF;
+            --primary-500: #2E8FFF;
+            --primary-600: #2472CC;
+            --secondary-500: #8B5CF6;
+            --accent-500: #10B981;
+            --neutral-50: #F9FAFB;
+            --neutral-100: #F3F4F6;
+            --neutral-500: #6B7280;
+            --neutral-600: #4B5563;
+            --neutral-700: #374151;
+            --neutral-800: #1F2937;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--neutral-50);
+            color: var(--neutral-800);
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem;
+        }
+
+        .logo {
+            max-width: 120px;
+            margin: 0 auto 2rem;
+            display: block;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            color: var(--neutral-800);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: var(--primary-50);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            background: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 0.5rem;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-title {
+            color: var(--neutral-800);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-description {
+            color: var(--neutral-600);
+            font-size: 0.875rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .help-section {
+            background: var(--neutral-50);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .help-title {
+            color: var(--neutral-700);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .help-links {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .help-link {
+            color: var(--primary-500);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--neutral-100);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--neutral-500);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .help-links {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ .LogoURL }}" alt="Pathly" class="logo">
+            <h2>Welcome to Pathly! 🎉</h2>
+            <p>We're excited to have you on board. Here's everything you need to know to get started.</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    📋
+                </div>
+                <div class="feature-title">Task Management</div>
+                <div class="feature-description">Create, organize, and track your tasks with ease</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    📊
+                </div>
+                <div class="feature-title">Analytics</div>
+                <div class="feature-description">Get insights into your productivity and progress</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    👥
+                </div>
+                <div class="feature-title">Collaboration</div>
+                <div class="feature-description">Work together with your team seamlessly</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    🎯
+                </div>
+                <div class="feature-title">Goal Setting</div>
+                <div class="feature-description">Set and achieve your objectives</div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{ .DashboardURL }}" class="cta-button">Get Started Now</a>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">Need Help?</div>
+            <div class="help-links">
+                <a href="{{ .DocsURL }}" class="help-link">
+                    📚 Documentation
+                </a>
+                <a href="{{ .TutorialsURL }}" class="help-link">
+                    🎓 Tutorials
+                </a>
+                <a href="{{ .SupportURL }}" class="help-link">
+                    💬 Support
+                </a>
+                <a href="{{ .CommunityURL }}" class="help-link">
+                    🤝 Community
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                © 2024 Pathly | 
+                <a href="{{ .PrivacyURL }}" style="color: var(--primary-500); text-decoration: none;">Privacy Policy</a> | 
+                <a href="{{ .TermsURL }}" style="color: var(--primary-500); text-decoration: none;">Terms of Service</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

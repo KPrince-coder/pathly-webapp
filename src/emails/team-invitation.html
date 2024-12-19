@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary-50: #F0F7FF;
+            --primary-500: #2E8FFF;
+            --primary-600: #2472CC;
+            --secondary-500: #8B5CF6;
+            --accent-500: #10B981;
+            --neutral-50: #F9FAFB;
+            --neutral-100: #F3F4F6;
+            --neutral-500: #6B7280;
+            --neutral-600: #4B5563;
+            --neutral-700: #374151;
+            --neutral-800: #1F2937;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--neutral-50);
+            color: var(--neutral-800);
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem;
+        }
+
+        .logo {
+            max-width: 120px;
+            margin: 0 auto 2rem;
+            display: block;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            color: var(--neutral-800);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .team-card {
+            background: var(--primary-50);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .team-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.5rem;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary-500);
+        }
+
+        .team-details h3 {
+            margin: 0;
+            color: var(--neutral-800);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .team-details p {
+            margin: 0.25rem 0 0;
+            color: var(--neutral-600);
+            font-size: 0.875rem;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .accept-btn {
+            background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+            color: white;
+            padding: 0.875rem 1.5rem;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-align: center;
+            transition: opacity 0.2s;
+        }
+
+        .accept-btn:hover {
+            opacity: 0.9;
+        }
+
+        .decline-btn {
+            background: var(--neutral-100);
+            color: var(--neutral-700);
+            padding: 0.875rem 1.5rem;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .decline-btn:hover {
+            background: var(--neutral-200);
+        }
+
+        .expiry-notice {
+            background: #FFFBEB;
+            border: 1px solid #FCD34D;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            font-size: 0.875rem;
+            color: #92400E;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--neutral-100);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--neutral-500);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ .LogoURL }}" alt="Pathly" class="logo">
+            <h2>You're Invited! 🎉</h2>
+            <p>{{ .InviterName }} has invited you to join their team on Pathly</p>
+        </div>
+
+        <div class="team-card">
+            <div class="team-info">
+                <div class="team-avatar">
+                    {{ .TeamInitials }}
+                </div>
+                <div class="team-details">
+                    <h3>{{ .TeamName }}</h3>
+                    <p>{{ .TeamMembers }} members</p>
+                </div>
+            </div>
+            <p style="margin: 0; color: var(--neutral-600);">
+                {{ .TeamDescription }}
+            </p>
+        </div>
+
+        <div class="action-buttons">
+            <a href="{{ .AcceptURL }}" class="accept-btn">Accept Invitation</a>
+            <a href="{{ .DeclineURL }}" class="decline-btn">Decline</a>
+        </div>
+
+        <div class="expiry-notice">
+            This invitation will expire in 7 days ({{ .ExpiryDate }})
+        </div>
+
+        <div class="footer">
+            <p>
+                © 2024 Pathly | 
+                <a href="{{ .PrivacyURL }}" style="color: var(--primary-500); text-decoration: none;">Privacy Policy</a> | 
+                <a href="{{ .TermsURL }}" style="color: var(--primary-500); text-decoration: none;">Terms of Service</a>
+            </p>
+            <p style="margin-top: 0.5rem;">
+                If you didn't expect this invitation, you can safely ignore it.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
