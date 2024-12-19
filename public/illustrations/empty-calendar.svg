@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="240" fill="none" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#a)">
+    <path fill="#F3F4F6" d="M0 0h240v240H0z"/>
+    <rect x="40" y="40" width="160" height="160" rx="8" fill="#E5E7EB"/>
+    <rect x="40" y="40" width="160" height="40" rx="8" fill="#3B82F6"/>
+    <path fill="#fff" d="M60 52h24v16H60z"/>
+    <path fill="#fff" d="M156 52h24v16h-24z"/>
+    <path stroke="#D1D5DB" stroke-width="2" d="M40 80h160"/>
+    <circle cx="76" cy="108" r="8" fill="#3B82F6" fill-opacity=".2"/>
+    <circle cx="116" cy="108" r="8" fill="#3B82F6" fill-opacity=".2"/>
+    <circle cx="156" cy="108" r="8" fill="#3B82F6"/>
+    <circle cx="76" cy="148" r="8" fill="#3B82F6" fill-opacity=".2"/>
+    <circle cx="116" cy="148" r="8" fill="#3B82F6"/>
+    <circle cx="156" cy="148" r="8" fill="#3B82F6" fill-opacity=".2"/>
+  </g>
+  <defs>
+    <clipPath id="a">
+      <path fill="#fff" d="M0 0h240v240H0z"/>
+    </clipPath>
+  </defs>
+</svg>

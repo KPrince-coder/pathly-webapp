@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="240" fill="none" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#a)">
+    <path fill="#F3F4F6" d="M0 0h240v240H0z"/>
+    <path fill="#E5E7EB" d="M40 40h160v160H40z"/>
+    <path fill="#3B82F6" fill-opacity=".2" d="M60 160h20v-40H60z"/>
+    <path fill="#3B82F6" d="M90 160h20v-80H90z"/>
+    <path fill="#3B82F6" fill-opacity=".2" d="M120 160h20v-60h-20z"/>
+    <path fill="#3B82F6" d="M150 160h20v-100h-20z"/>
+    <path stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M60 60h120M60 100h120M60 140h120"/>
+    <circle cx="150" cy="60" r="6" fill="#3B82F6"/>
+    <circle cx="90" cy="100" r="6" fill="#3B82F6"/>
+    <circle cx="120" cy="140" r="6" fill="#3B82F6"/>
+  </g>
+  <defs>
+    <clipPath id="a">
+      <path fill="#fff" d="M0 0h240v240H0z"/>
+    </clipPath>
+  </defs>
+</svg>
