@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ThemeToggle } from '@/context/ThemeContext';
 import { Search } from '@/components/ui/Search';
+import { Logo } from '@/components/ui/Logo';
 import { FiHome, FiCalendar, FiInbox, FiSettings, FiBell, FiPlus } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -26,37 +27,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-8">
-            <Link 
-              href="/"
-              className="flex items-center gap-2 text-primary-600 dark:text-primary-400"
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center"
-              >
-                <svg
-                  className="h-8 w-8"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 2L2 7L12 12L22 7L12 2Z"
-                    className="fill-primary-600 dark:fill-primary-400"
-                  />
-                  <path
-                    d="M2 17L12 22L22 17"
-                    className="fill-primary-500 dark:fill-primary-500"
-                  />
-                  <path
-                    d="M2 12L12 17L22 12"
-                    className="fill-primary-400 dark:fill-primary-600"
-                  />
-                </svg>
-                <span className="ml-2 text-xl font-bold">Pathly</span>
-              </motion.div>
-            </Link>
+            <Logo className="text-primary-600 dark:text-primary-400" />
 
             <nav className="hidden md:flex">
               <ul className="flex items-center gap-6">
