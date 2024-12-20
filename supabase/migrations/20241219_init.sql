@@ -1,12 +1,3 @@
--- Create profiles table
-create table profiles (
-  id uuid references auth.users on delete cascade primary key,
-  full_name text,
-  email text unique,
-  avatar_url text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
 
 -- Enable Row Level Security (RLS)
 alter table profiles enable row level security;
