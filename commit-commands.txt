@@ -1,0 +1,38 @@
+# 1. Documentation Changes
+git add docs/features-documentation.md README.md
+git commit -m "docs: Add comprehensive feature documentation and update README"
+
+# 2. Security Features
+git add src/components/security/BiometricAuth.tsx src/lib/encryption.ts src/lib/security/breachMonitor.ts
+git commit -m "feat(security): Implement biometric auth, encryption, and breach monitoring"
+
+# 3. Integration Features - Calendar
+git add src/lib/integrations/calendar.ts
+git commit -m "feat(integrations): Add calendar integration with Google and Microsoft support"
+
+# 4. Integration Features - Email
+git add src/lib/integrations/email.ts
+git commit -m "feat(integrations): Add email integration with Gmail and IMAP support"
+
+# 5. Integration Features - API
+git add src/lib/integrations/api.ts
+git commit -m "feat(integrations): Add generic API integration system"
+
+# 6. Automation Features
+git add src/lib/automation/rules.ts
+git commit -m "feat(automation): Add automation rules engine and workflow system"
+
+# 7. Database Schema
+git add supabase/migrations/20241220_integrations.sql
+git commit -m "feat(db): Add database schema for integrations and automation"
+
+# 8. Scripts
+git add scripts/commit-changes.sh scripts/commit-changes.ps1
+git commit -m "chore: Add commit automation scripts"
+
+# Push all changes
+git push origin main
+
+# If you need to set up the remote first:
+# git remote add origin https://github.com/KPrince-coder/pathly-webapp.git
+# git push -u origin main

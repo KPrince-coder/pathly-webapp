@@ -52,5 +52,20 @@ git commit -m "feat(ui): Enhance user interface and experience
 - Add loading states and error handling
 - Improve navigation and accessibility"
 
+# 6. Documentation update
+git add README.md
+git commit -m "docs: Update README with comprehensive documentation
+
+- Add detailed feature descriptions
+  - Enhanced note-taking system
+  - Password manager
+  - Task management
+- Update installation and setup instructions
+- Add technology stack breakdown
+- Include configuration details
+- Provide usage guides
+- Update contributing guidelines
+- Add support information"
+
 # Push all changes
 git push origin main
