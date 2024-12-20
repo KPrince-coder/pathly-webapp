@@ -54,83 +54,43 @@
             letter-spacing: -0.025em;
         }
 
-        .team-card {
+        .auth-info {
             background: var(--primary-50);
             border-radius: 0.75rem;
             padding: 1.5rem;
             margin: 2rem 0;
         }
 
-        .team-info {
-            display: flex;
-            align-items: center;
+        .device-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-top: 1rem;
         }
 
-        .team-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 0.5rem;
-            background: white;
+        .device-item {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: var(--primary-500);
-        }
-
-        .team-details h3 {
-            margin: 0;
-            color: var(--neutral-800);
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-
-        .team-details p {
-            margin: 0.25rem 0 0;
+            gap: 0.5rem;
             color: var(--neutral-600);
             font-size: 0.875rem;
         }
 
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .accept-btn {
+        .auth-button {
+            display: inline-block;
             background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
             color: white;
-            padding: 0.875rem 1.5rem;
+            padding: 1rem 2rem;
             text-decoration: none;
             border-radius: 0.5rem;
             font-weight: 500;
+            margin: 1.5rem 0;
             text-align: center;
-            transition: opacity 0.2s;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .accept-btn:hover {
-            opacity: 0.9;
-        }
-
-        .decline-btn {
-            background: var(--neutral-100);
-            color: var(--neutral-700);
-            padding: 0.875rem 1.5rem;
-            text-decoration: none;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            text-align: center;
-            transition: background 0.2s;
-        }
-
-        .decline-btn:hover {
-            background: var(--neutral-200);
-        }
-
-        .expiry-notice {
+        .security-notice {
             background: #FFFBEB;
             border: 1px solid #FCD34D;
             border-radius: 0.5rem;
@@ -158,8 +118,27 @@
                 padding: 1.5rem;
             }
 
-            .action-buttons {
+            .device-info {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: var(--neutral-900);
+                color: var(--neutral-50);
+            }
+
+            .container {
+                background-color: var(--neutral-800);
+            }
+
+            .auth-info {
+                background: var(--neutral-700);
+            }
+
+            .device-item {
+                color: var(--neutral-300);
             }
         }
     </style>
@@ -168,40 +147,43 @@
     <div class="container">
         <div class="header">
             <img src="{{ .LogoURL }}" alt="Pathly" class="logo">
-            <h2>You're Invited! 🎉</h2>
-            <p>{{ .InviterName }} has invited you to join their team on Pathly</p>
+            <h2>Verify Your Login</h2>
+            <p>A login attempt was detected from a new device or location.</p>
         </div>
 
-        <div class="team-card">
-            <div class="team-info">
-                <div class="team-avatar">
-                    {{ .TeamInitials }}
+        <div class="auth-info">
+            <div class="device-info">
+                <div class="device-item">
+                    📱 Device: {{ .DeviceType }}
                 </div>
-                <div class="team-details">
-                    <h3>{{ .TeamName }}</h3>
-                    <p>{{ .TeamMembers }} members</p>
+                <div class="device-item">
+                    🌍 Location: {{ .Location }}
+                </div>
+                <div class="device-item">
+                    🕒 Time: {{ .Timestamp }}
+                </div>
+                <div class="device-item">
+                    🔍 IP Address: {{ .IPAddress }}
                 </div>
             </div>
-            <p style="margin: 0; color: var(--neutral-600);">
-                {{ .TeamDescription }}
-            </p>
         </div>
 
-        <div class="action-buttons">
-            <a href="{{ .AcceptURL }}" class="accept-btn">Accept Invitation</a>
-            <a href="{{ .DeclineURL }}" class="decline-btn">Decline</a>
+        <div style="text-align: center;">
+            <a href="{{ .AuthenticationURL }}" class="auth-button">Verify Login</a>
         </div>
 
-        <div class="expiry-notice">
-            This invitation will expire in 7 days ({{ .ExpiryDate }})
+        <div class="security-notice">
+            <strong>Security Notice:</strong> If you didn't attempt to log in, please ignore this email and consider changing your password.
         </div>
 
         <div class="footer">
-            <p class="text-sm text-gray-500">
-                &copy; {{ .CurrentYear }} Pathly. All rights reserved.
+            <p>
+                This login verification will expire in 30 minutes.
             </p>
-            <p style="margin-top: 0.5rem;">
-                If you didn't expect this invitation, you can safely ignore it.
+            <p>
+                &copy; {{ .CurrentYear }} Pathly | 
+                <a href="{{ .PrivacyURL }}" style="color: var(--primary-500); text-decoration: none;">Privacy Policy</a> | 
+                <a href="{{ .TermsURL }}" style="color: var(--primary-500); text-decoration: none;">Terms of Service</a>
             </p>
         </div>
     </div>
