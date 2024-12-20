@@ -119,8 +119,9 @@ export function ThemeToggle() {
                 ))}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

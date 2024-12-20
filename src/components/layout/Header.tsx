@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { ThemeToggle } from '@/context/ThemeContext';
 import { Search } from '@/components/ui/Search';
