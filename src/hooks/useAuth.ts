@@ -4,26 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-interface AuthError {
-  message: string;
-  field?: string;
-}
-
-interface SignUpData {
-  name: string;
-  email: string;
-  password: string;
-}
-
-interface SignInData {
-  email: string;
-  password: string;
-}
-
 export function useAuth() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<AuthError | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -39,18 +23,17 @@ export function useAuth() {
     };
   }, [router]);
 
-  const signUp = async (data: SignUpData) => {
+  const signUp = async (email: string, password: string, name: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // First, sign up the user
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+        email,
+        password,
         options: {
           data: {
-            full_name: data.name,
+            full_name: name,
           },
         },
       });
@@ -58,26 +41,21 @@ export function useAuth() {
       if (signUpError) throw signUpError;
 
       if (authData.user) {
-        // Create a profile in the profiles table
         const { error: profileError } = await supabase
           .from('profiles')
           .insert([
             {
               id: authData.user.id,
-              full_name: data.name,
-              email: data.email,
+              full_name: name,
+              email,
             },
           ]);
 
         if (profileError) throw profileError;
-
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError({
-        message: err.message || 'Failed to sign up',
-        field: err.field,
-      });
+      setError(err.message || 'Failed to sign up');
       return false;
     } finally {
       setIsLoading(false);
@@ -86,14 +64,14 @@ export function useAuth() {
     return true;
   };
 
-  const signIn = async (data: SignInData) => {
+  const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
+        email,
+        password,
       });
 
       if (signInError) throw signInError;
@@ -102,10 +80,7 @@ export function useAuth() {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError({
-        message: err.message || 'Failed to sign in',
-        field: err.field,
-      });
+      setError(err.message || 'Failed to sign in');
       return false;
     } finally {
       setIsLoading(false);
@@ -122,9 +97,7 @@ export function useAuth() {
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) throw signOutError;
     } catch (err: any) {
-      setError({
-        message: err.message || 'Failed to sign out',
-      });
+      setError(err.message || 'Failed to sign out');
       return false;
     } finally {
       setIsLoading(false);
@@ -144,10 +117,7 @@ export function useAuth() {
 
       if (resetError) throw resetError;
     } catch (err: any) {
-      setError({
-        message: err.message || 'Failed to send reset password email',
-        field: 'email',
-      });
+      setError(err.message || 'Failed to send reset password email');
       return false;
     } finally {
       setIsLoading(false);
