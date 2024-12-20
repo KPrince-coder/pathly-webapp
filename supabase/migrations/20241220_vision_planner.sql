@@ -208,11 +208,11 @@ CREATE POLICY "Users can delete their own vision board"
 -- Storage policies for vision board media
 CREATE POLICY "Users can upload vision board media"
     ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'media' AND path LIKE 'vision-board/%');
+    WITH CHECK (bucket_id = 'media' AND name LIKE 'vision-board/%');
 
 CREATE POLICY "Users can view vision board media"
     ON storage.objects FOR SELECT
-    USING (bucket_id = 'media' AND path LIKE 'vision-board/%');
+    USING (bucket_id = 'media' AND name LIKE 'vision-board/%');
 
 -- Create storage bucket for vision board media
 INSERT INTO storage.buckets (id, name)
