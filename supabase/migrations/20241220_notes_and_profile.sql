@@ -1,6 +1,9 @@
 -- Enable pgcrypto for password hashing and encryption
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- Drop existing profiles table if it exists
+DROP TABLE IF EXISTS public.profiles CASCADE;
+
 -- Profiles table with enhanced features
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID REFERENCES auth.users(id) PRIMARY KEY,
