@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiCalendar } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
 interface DatePickerProps {
-  date: Date;
+  date: Date | string;
   onDateChange: (date: Date) => void;
   label?: string;
   error?: boolean;
@@ -23,6 +23,42 @@ export function DatePicker({
   className,
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    typeof date === 'string' ? new Date(date) : date
+  );
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (date) {
+      setSelectedDate(typeof date === 'string' ? new Date(date) : date);
+    }
+  }, [date]);
+
+  if (!mounted) {
+    return (
+      <div className={className}>
+        {label && (
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+          </label>
+        )}
+        <Button
+          variant="outline"
+          className={cn(
+            'w-full justify-start text-left font-normal',
+            error && 'border-red-500 focus:ring-red-500',
+          )}
+        >
+          <FiCalendar className="mr-2 h-4 w-4" />
+          Loading...
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className={className}>
@@ -38,11 +74,11 @@ export function DatePicker({
           className={cn(
             'w-full justify-start text-left font-normal',
             error && 'border-red-500 focus:ring-red-500',
-            !date && 'text-gray-500'
+            !selectedDate && 'text-gray-500'
           )}
         >
           <FiCalendar className="mr-2 h-4 w-4" />
-          {date ? format(date, 'PPP') : 'Pick a date'}
+          {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
         </Popover.Button>
         <Transition
           show={isOpen}
@@ -60,7 +96,7 @@ export function DatePicker({
                   onDateChange(value as Date);
                   setIsOpen(false);
                 }}
-                value={date}
+                value={selectedDate}
                 className="border-0"
               />
             </div>

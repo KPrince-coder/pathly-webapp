@@ -123,17 +123,19 @@ export function useAuth() {
         .from('profiles')
         .insert([{
           id: data.user.id,
-          email: email.toLowerCase().trim(),
-          username,
-          full_name: name.trim(),
+          username: username,
+          display_name: name.trim(),
+          bio: '',
+          avatar_type: 'default',
           created_at: new Date().toISOString(),
-        }])
-        .single();
+          updated_at: new Date().toISOString()
+        }]);
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        await supabase.auth.signOut(); // Cleanup on profile creation failure
-        throw new Error('Failed to create user profile');
+        // Delete the auth user if profile creation fails
+        await supabase.auth.admin.deleteUser(data.user.id);
+        throw new Error('Database error saving new user profile. Please try again.');
       }
 
       showSuccess('Account created! Please check your email to confirm your account.');
