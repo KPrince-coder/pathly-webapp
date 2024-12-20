@@ -31,7 +31,7 @@ interface ApiEndpoint {
 
 export class ApiIntegration {
   private supabase;
-  private encryption;
+  private encryption: ZeroKnowledgeEncryption;
   private apis: Map<string, ApiConfig> = new Map();
   private endpoints: Map<string, ApiEndpoint[]> = new Map();
 
@@ -52,9 +52,9 @@ export class ApiIntegration {
   ): Promise<void> {
     try {
       // Encrypt sensitive credentials
-      const encryptedCredentials = await this.encryption.encrypt(
+      const encryptedCredentials = await ZeroKnowledgeEncryption.encrypt(
         JSON.stringify(config.credentials),
-        this.supabaseKey
+        Buffer.from(this.supabaseKey)
       );
 
       // Store API configuration

@@ -1,25 +1,83 @@
--- Enable pgcrypto for password hashing and encryption
+-- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Drop existing profiles table if it exists
+-- Drop existing tables if they exist
 DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP TABLE IF EXISTS public.notes CASCADE;
+DROP TABLE IF EXISTS public.note_shares CASCADE;
+DROP TABLE IF EXISTS public.note_versions CASCADE;
+DROP TABLE IF EXISTS public.tags CASCADE;
+DROP TABLE IF EXISTS public.folders CASCADE;
+DROP TABLE IF EXISTS public.folder_notes CASCADE;
 
--- Profiles table with enhanced features
-CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID REFERENCES auth.users(id) PRIMARY KEY,
-    username TEXT UNIQUE,
-    display_name TEXT,
-    bio TEXT,
-    avatar_type TEXT CHECK (avatar_type IN ('default', 'custom', 'generated')),
-    avatar_url TEXT,
-    avatar_seed TEXT, -- For generating consistent random avatars
-    theme_preference JSONB DEFAULT '{"mode": "light", "color": "blue"}',
-    privacy_settings JSONB DEFAULT '{"default_note_visibility": "private", "show_online_status": true}',
-    notification_settings JSONB DEFAULT '{"email": true, "push": true}',
-    last_active TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Create auth schema if it doesn't exist
+CREATE SCHEMA IF NOT EXISTS auth;
+
+-- Create auth.users if it doesn't exist (this is usually created by Supabase automatically)
+CREATE TABLE IF NOT EXISTS auth.users (
+    id uuid NOT NULL PRIMARY KEY,
+    email text,
+    encrypted_password text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
+
+-- Create profiles table
+CREATE TABLE public.profiles (
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    bio TEXT DEFAULT '',
+    avatar_type TEXT DEFAULT 'default' CHECK (avatar_type IN ('default', 'custom', 'generated')),
+    avatar_url TEXT,
+    avatar_seed TEXT,
+    theme_preference JSONB DEFAULT '{"mode": "light", "color": "blue"}'::jsonb NOT NULL,
+    privacy_settings JSONB DEFAULT '{"default_note_visibility": "private", "show_online_status": true}'::jsonb NOT NULL,
+    notification_settings JSONB DEFAULT '{"email": true, "push": true}'::jsonb NOT NULL,
+    last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    CONSTRAINT username_length CHECK (char_length(username) >= 3 AND char_length(username) <= 30)
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS profiles_username_idx ON public.profiles (username);
+CREATE INDEX IF NOT EXISTS profiles_created_at_idx ON public.profiles (created_at);
+
+-- Enable Row Level Security
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS Policies
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
+CREATE POLICY "Public profiles are viewable by everyone" 
+    ON public.profiles FOR SELECT 
+    USING (true);
+
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile" 
+    ON public.profiles FOR INSERT 
+    WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" 
+    ON public.profiles FOR UPDATE 
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
+
+-- Create trigger to update the updated_at timestamp
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
+CREATE TRIGGER profiles_updated_at
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_updated_at();
 
 -- Notes table with encryption and privacy features
 CREATE TABLE IF NOT EXISTS public.notes (
@@ -93,73 +151,14 @@ CREATE TABLE IF NOT EXISTS public.folder_notes (
     PRIMARY KEY (folder_id, note_id)
 );
 
--- Functions and Triggers
-
--- Update timestamps
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_profiles_updated_at
-    BEFORE UPDATE ON public.profiles
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_folders_updated_at
-    BEFORE UPDATE ON public.folders
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Function to handle note encryption
-CREATE OR REPLACE FUNCTION encrypt_note_content()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.is_encrypted THEN
-        -- Only encrypt if content has changed and note is marked as encrypted
-        IF TG_OP = 'INSERT' OR OLD.content != NEW.content THEN
-            -- Use pgcrypto to encrypt content
-            NEW.encrypted_content = encode(encrypt(
-                NEW.content::bytea,
-                NEW.password_hash::bytea,
-                'aes'
-            ), 'base64');
-            NEW.content = NULL; -- Clear plaintext content
-        END IF;
-    END IF;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER encrypt_note_content_trigger
-    BEFORE INSERT OR UPDATE ON public.notes
-    FOR EACH ROW
-    EXECUTE FUNCTION encrypt_note_content();
-
--- RLS Policies
-
--- Profiles
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public profiles are viewable by everyone"
-    ON public.profiles FOR SELECT
-    USING (true);
-
-CREATE POLICY "Users can insert their own profile"
-    ON public.profiles FOR INSERT
-    WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-    ON public.profiles FOR UPDATE
-    USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id);
-
--- Notes
+-- Enable Row Level Security
 ALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.note_shares ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.folders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.folder_notes ENABLE ROW LEVEL SECURITY;
 
+-- Create RLS Policies
 CREATE POLICY "Users can view their own notes"
     ON public.notes FOR SELECT
     USING (
@@ -197,10 +196,7 @@ CREATE POLICY "Users can delete their own notes"
         )
     );
 
--- Note shares
-ALTER TABLE public.note_shares ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their shared notes"
+CREATE POLICY "Users can view shares of their notes"
     ON public.note_shares FOR SELECT
     USING (
         auth.uid() = shared_by
@@ -211,14 +207,46 @@ CREATE POLICY "Users can share their own notes"
     ON public.note_shares FOR INSERT
     WITH CHECK (
         auth.uid() = shared_by
-        AND note_id IN (
-            SELECT id FROM public.notes
-            WHERE user_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.notes
+            WHERE id = note_id
+            AND user_id = auth.uid()
         )
     );
 
--- Folders
-ALTER TABLE public.folders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can update shares of their notes"
+    ON public.note_shares FOR UPDATE
+    USING (
+        auth.uid() = shared_by
+        AND EXISTS (
+            SELECT 1 FROM public.notes
+            WHERE id = note_id
+            AND user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can delete shares of their notes"
+    ON public.note_shares FOR DELETE
+    USING (
+        auth.uid() = shared_by
+        OR auth.uid() = shared_with
+    );
+
+CREATE POLICY "Users can view their own tags"
+    ON public.tags FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own tags"
+    ON public.tags FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own tags"
+    ON public.tags FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own tags"
+    ON public.tags FOR DELETE
+    USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view their own folders"
     ON public.folders FOR SELECT
@@ -235,3 +263,28 @@ CREATE POLICY "Users can update their own folders"
 CREATE POLICY "Users can delete their own folders"
     ON public.folders FOR DELETE
     USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their folder notes"
+    ON public.folder_notes FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.folders
+            WHERE id = folder_id
+            AND user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can manage their folder notes"
+    ON public.folder_notes FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.folders
+            WHERE id = folder_id
+            AND user_id = auth.uid()
+        )
+        AND EXISTS (
+            SELECT 1 FROM public.notes
+            WHERE id = note_id
+            AND user_id = auth.uid()
+        )
+    );

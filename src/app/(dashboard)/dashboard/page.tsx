@@ -1,39 +1,41 @@
-import { Stats } from '@/components/dashboard/Stats';
-import { GoalCard } from '@/components/goals/GoalCard';
-import { TaskCard } from '@/components/tasks/TaskCard';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Modal } from '@/components/ui/Modal';
-import { useState } from 'react';
-import { FiPlus } from 'react-icons/fi';
-import { GoalForm } from '@/components/goals/GoalForm';
-import { TaskForm } from '@/components/tasks/TaskForm';
+"use client";
+
+import { Stats } from "@/components/dashboard/Stats";
+import { GoalCard } from "@/components/goals/GoalCard";
+import { TaskCard } from "@/components/tasks/TaskCard";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Modal } from "@/components/ui/Modal";
+import { useState } from "react";
+import { FiPlus } from "react-icons/fi";
+import { GoalForm } from "@/components/goals/GoalForm";
+import { TaskForm } from "@/components/tasks/TaskForm";
 
 // Temporary mock data
 const mockGoals = [
   {
-    id: '1',
-    user_id: '1',
-    title: 'Learn Next.js',
-    description: 'Master Next.js and build modern web applications',
-    category: 'Education',
-    priority: 'High',
-    deadline: new Date('2024-12-31'),
+    id: "1",
+    user_id: "1",
+    title: "Learn Next.js",
+    description: "Master Next.js and build modern web applications",
+    category: "Education",
+    priority: "High",
+    deadline: new Date("2024-12-31"),
     progress: 45,
-    status: 'In Progress',
+    status: "In Progress",
     created_at: new Date(),
     updated_at: new Date(),
   },
   {
-    id: '2',
-    user_id: '1',
-    title: 'Exercise Regularly',
-    description: 'Work out at least 3 times a week',
-    category: 'Health',
-    priority: 'Medium',
-    deadline: new Date('2024-12-31'),
+    id: "2",
+    user_id: "1",
+    title: "Exercise Regularly",
+    description: "Work out at least 3 times a week",
+    category: "Health",
+    priority: "Medium",
+    deadline: new Date("2024-12-31"),
     progress: 75,
-    status: 'In Progress',
+    status: "In Progress",
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -41,24 +43,26 @@ const mockGoals = [
 
 const mockTasks = [
   {
-    id: '1',
-    goal_id: '1',
-    title: 'Complete Next.js Tutorial',
-    description: 'Go through the official Next.js documentation',
-    priority: 'High',
+    id: "1",
+    goal_id: "1",
+    user_id: "1",
+    title: "Complete Next.js Tutorial",
+    description: "Go through the official Next.js documentation",
+    priority: "High",
     deadline: new Date(),
-    status: 'Todo',
+    status: "Todo",
     created_at: new Date(),
     updated_at: new Date(),
   },
   {
-    id: '2',
-    goal_id: '2',
-    title: 'Morning Jog',
-    description: '30 minutes jogging in the park',
-    priority: 'Medium',
+    id: "2",
+    goal_id: "2",
+    user_id: "1",
+    title: "Morning Jog",
+    description: "30 minutes jogging in the park",
+    priority: "Medium",
     deadline: new Date(),
-    status: 'Todo',
+    status: "Todo",
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -114,7 +118,7 @@ export default function DashboardPage() {
       >
         <GoalForm
           onSubmit={(data) => {
-            console.log('New goal:', data);
+            console.log("New goal:", data);
             setIsGoalModalOpen(false);
           }}
         />
@@ -128,7 +132,7 @@ export default function DashboardPage() {
       >
         <TaskForm
           onSubmit={(data) => {
-            console.log('New task:', data);
+            console.log("New task:", data);
             setIsTaskModalOpen(false);
           }}
         />

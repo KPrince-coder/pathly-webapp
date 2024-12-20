@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Goal } from '@/types';
 import { GoalCard } from '@/components/goals/GoalCard';

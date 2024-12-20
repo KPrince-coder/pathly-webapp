@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFeatureStore } from '@/store/features';
+import  useFeatureStore  from '@/store/features';
 import { FiEdit3, FiLoader } from 'react-icons/fi';
 
 const NoteSummarizer: React.FC<{ note: string }> = ({ note }) => {

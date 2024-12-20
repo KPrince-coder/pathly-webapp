@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import RealTimeEditor from './RealTimeEditor';
 import { FiUsers, FiFolder, FiPlus, FiSettings } from 'react-icons/fi';
 
@@ -21,7 +21,7 @@ interface Document {
 }
 
 const TeamWorkspace: React.FC<{ workspaceId: string }> = ({ workspaceId }) => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);

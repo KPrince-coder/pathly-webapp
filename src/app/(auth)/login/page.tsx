@@ -9,6 +9,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { FormInput } from '@/components/ui/FormInput';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/Button';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,7 +21,6 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
@@ -88,28 +88,16 @@ export default function LoginPage() {
               required
             />
 
-            <div className="relative">
-              <FormInput
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                error={errors.password}
-                icon={<FiLock className="text-gray-400" />}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[38px] text-gray-400 hover:text-gray-600"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
-            </div>
+            <PasswordInput
+              label="Password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              error={errors.password}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              required
+            />
           </div>
 
           <div className="flex items-center justify-between">

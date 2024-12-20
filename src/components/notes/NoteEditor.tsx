@@ -8,7 +8,7 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import { HexColorPicker } from 'react-colorful';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
+import { useSupabase, useSupabaseUser } from '@/hooks/useSupabase';
 import { toast } from 'react-hot-toast';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import html2canvas from 'html2canvas';
@@ -89,8 +89,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ initialNote, onSave }) =
   const [audioUrl, setAudioUrl] = useState(initialNote?.voice_note_url);
   const [showTimestamp, setShowTimestamp] = useState(true);
 
-  const supabase = useSupabaseClient();
-  const user = useUser();
+  const supabase = useSupabase();
+  const user = useSupabaseUser();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 

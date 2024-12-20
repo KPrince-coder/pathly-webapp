@@ -1,42 +1,79 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useNotification } from '@/context/NotificationContext';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useNotification } from "@/context/NotificationContext";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { useAuth } from "@/hooks/useAuth";
+
+const capitalizeWords = (str: string) => {
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
 
 export default function SignUpPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const { signUp, isLoading, error: authError } = useAuth();
   const { success, error: showError } = useNotification();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    if (loading || isLoading) {
+      return;
+    }
+
+    if (!email || !password || !name) {
+      showError("All fields are required");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const capitalizedName = capitalizeWords(name.trim());
+      console.log("Starting signup process...", {
         email,
-        password,
-        options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-        },
+        name: capitalizedName,
       });
 
-      if (error) {
-        showError(error.message);
+      const result = await signUp(email, password, capitalizedName);
+      console.log("Signup result:", result);
+
+      if (result) {
+        success(
+          "Account created successfully! Please check your email for the confirmation link."
+        );
+
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+          router.push("/login?message=check-email");
+        }, 2000);
       } else {
-        success('Check your email for the confirmation link!');
-        router.push('/login?message=check-email');
+        // If result is false, there should be an authError
+        setError(authError || "Failed to create account. Please try again.");
       }
-    } catch (error) {
-      showError('An unexpected error occurred');
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      setError(error.message || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    // Update the input value with capitalized version
+    e.target.value = capitalizeWords(value);
   };
 
   return (
@@ -48,6 +85,27 @@ export default function SignUpPage() {
           </h2>
 
           <form className="space-y-6" onSubmit={handleSignUp}>
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-neutral-700 dark:text-neutral-200"
+              >
+                Full Name
+              </label>
+              <div className="mt-1">
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  value={capitalizeWords(name)}
+                  onChange={handleNameChange}
+                  className="block w-full appearance-none rounded-md border border-neutral-300 px-3 py-2 shadow-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder:text-neutral-400 sm:text-sm"
+                  placeholder="John Doe"
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="email"
@@ -78,16 +136,16 @@ export default function SignUpPage() {
                 Password
               </label>
               <div className="mt-1">
-                <input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full appearance-none rounded-md border border-neutral-300 px-3 py-2 shadow-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder:text-neutral-400 sm:text-sm"
                   placeholder="••••••••"
+                  showStrengthIndicator
                 />
               </div>
             </div>
@@ -95,16 +153,22 @@ export default function SignUpPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isLoading}
                 className="flex w-full justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-primary-500 dark:hover:bg-primary-400"
               >
-                {loading ? 'Creating account...' : 'Sign up'}
+                {loading || isLoading ? "Creating account..." : "Sign up"}
               </button>
             </div>
+
+            {error && (
+              <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
           </form>
 
           <p className="mt-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <a
               href="/login"
               className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"

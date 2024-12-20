@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import { FiFingerprint, FiCamera, FiShield } from 'react-icons/fi';
 import * as faceapi from 'face-api.js';
 
@@ -11,7 +11,7 @@ interface BiometricAuthProps {
 }
 
 const BiometricAuth: React.FC<BiometricAuthProps> = ({ onAuthSuccess, onAuthFailure }) => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [isLoading, setIsLoading] = useState(false);
   const [isFaceIdSupported, setIsFaceIdSupported] = useState(false);
   const [isFingerPrintSupported, setIsFingerPrintSupported] = useState(false);

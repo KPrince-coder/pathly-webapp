@@ -1,3 +1,5 @@
+"use client";
+
 import { Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import dynamic from 'next/dynamic';

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { toast } from 'react-hot-toast';
 import { Key, Lock, Eye, EyeOff, Copy, Trash2, Edit2, Plus, Shield, RefreshCw } from 'react-feather';
 import zxcvbn from 'zxcvbn';
+import { useSupabase, useSupabaseUser } from '@/hooks/useSupabase';
 
 interface PasswordVault {
   id: string;
@@ -58,8 +58,8 @@ export const PasswordManager: React.FC = () => {
   });
   const [generatedPassword, setGeneratedPassword] = useState('');
 
-  const supabase = useSupabaseClient();
-  const user = useUser();
+  const supabase = useSupabase();
+  const user = useSupabaseUser();
 
   useEffect(() => {
     if (user && isUnlocked) {

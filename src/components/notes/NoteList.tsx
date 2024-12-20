@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
+import { useSupabase, useSupabaseUser } from '@/hooks/useSupabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Eye, EyeOff, Folder, Tag, Search } from 'react-feather';
 import { toast } from 'react-hot-toast';
@@ -23,8 +23,8 @@ interface Folder {
 }
 
 export const NoteList: React.FC = () => {
-  const supabase = useSupabaseClient();
-  const user = useUser();
+  const supabase = useSupabase();
+  const user = useSupabaseUser();
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);

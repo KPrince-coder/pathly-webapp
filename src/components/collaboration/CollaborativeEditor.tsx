@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import { FiEdit, FiSave } from 'react-icons/fi';
 
 const CollaborativeEditor: React.FC<{ noteId: string }> = ({ noteId }) => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [content, setContent] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
 

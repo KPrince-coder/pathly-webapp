@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import Graph from 'react-graph-vis';
 import { FiLink } from 'react-icons/fi';
 
 const KnowledgeGraph: React.FC = () => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
   const [selectedContent, setSelectedContent] = useState(null);
 

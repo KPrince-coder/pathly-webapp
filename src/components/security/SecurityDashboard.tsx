@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import {
   FiShield,
   FiAlertTriangle,
@@ -36,7 +36,7 @@ interface SecurityEvent {
 }
 
 const SecurityDashboard: React.FC = () => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [overallScore, setOverallScore] = useState<number>(0);
   const [metrics, setMetrics] = useState<SecurityMetric[]>([]);
   const [recentEvents, setRecentEvents] = useState<SecurityEvent[]>([]);

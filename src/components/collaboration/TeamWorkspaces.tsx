@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import { FiPlus, FiTrash } from 'react-icons/fi';
 
 const TeamWorkspaces: React.FC = () => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [workspaces, setWorkspaces] = useState<{ id: string; name: string }[]>([]);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
 

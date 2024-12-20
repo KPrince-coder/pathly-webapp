@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import dynamic from 'next/dynamic';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import useFeatureStore from '@/store/features';
@@ -55,7 +55,7 @@ interface SharedDocument {
 }
 
 const LiveWorkspace: React.FC = () => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeDocument, setActiveDocument] = useState<SharedDocument | null>(null);

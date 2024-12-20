@@ -17,7 +17,8 @@
 .DS_Store
 *.pem
 .env
-.env.local
+# .env.local TODO: uncomment this
+# * very important to uncomment above code
 .env.development.local
 .env.test.local
 .env.production.local

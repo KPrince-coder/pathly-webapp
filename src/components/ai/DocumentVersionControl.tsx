@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { createBrowserClient } from '@supabase/ssr';
 import { FiGitBranch } from 'react-icons/fi';
 
 const DocumentVersionControl: React.FC<{ noteId: string }> = ({ noteId }) => {
-  const supabase = useSupabaseClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const [versions, setVersions] = useState<{ id: string; content: string; created_at: string }[]>([]);
 
   useEffect(() => {

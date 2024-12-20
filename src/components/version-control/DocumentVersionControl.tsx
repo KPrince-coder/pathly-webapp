@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabase } from '../../hooks/useSupabase';
 import { FiGitBranch, FiGitCommit, FiGitMerge, FiClock } from 'react-icons/fi';
 import { diffChars } from 'diff';
 
@@ -24,7 +24,7 @@ interface Branch {
 }
 
 const DocumentVersionControl: React.FC<{ documentId: string }> = ({ documentId }) => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabase();
   const [versions, setVersions] = useState<Version[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [currentBranch, setCurrentBranch] = useState<string>('main');

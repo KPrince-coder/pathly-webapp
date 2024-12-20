@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
+import { useSupabase, useSupabaseUser } from '@/hooks/useSupabase';
 import { motion } from 'framer-motion';
 import { Camera, User, Lock, Bell, Moon, Sun, LogOut } from 'react-feather';
 import { toast } from 'react-hot-toast';
@@ -34,8 +34,8 @@ interface ProfileData {
 }
 
 export const ProfileSettings: React.FC = () => {
-  const supabase = useSupabaseClient();
-  const user = useUser();
+  const supabase = useSupabase();
+  const user = useSupabaseUser();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [selectedTab, setSelectedTab] = useState('profile');
