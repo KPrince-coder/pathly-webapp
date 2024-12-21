@@ -10,11 +10,11 @@ export function useSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   ));
 
-  return supabase;
+  return { supabase };
 }
 
 export function useSupabaseUser() {
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {

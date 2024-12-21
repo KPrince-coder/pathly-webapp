@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
-import { FiGithub, FiGoogle } from 'react-icons/fi';
+import { FiGithub } from 'react-icons/fi';
+import { AiOutlineGoogle } from 'react-icons/ai';
 
 interface OAuthButtonsProps {
   onError?: (error: string) => void;
@@ -44,7 +45,7 @@ export function OAuthButtons({ onError }: OAuthButtonsProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full sm:w-auto">
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300" />
@@ -57,12 +58,16 @@ export function OAuthButtons({ onError }: OAuthButtonsProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <Button
             type="button"
             variant="outline"
             onClick={() => handleOAuthSignIn('github')}
-            className="w-full"
+            className="w-full dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:border-neutral-700"
             isLoading={isLoading === 'github'}
           >
             <FiGithub className="w-5 h-5 mr-2" />
@@ -70,15 +75,19 @@ export function OAuthButtons({ onError }: OAuthButtonsProps) {
           </Button>
         </motion.div>
 
-        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
           <Button
             type="button"
             variant="outline"
             onClick={() => handleOAuthSignIn('google')}
-            className="w-full"
+            className="w-full dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:border-neutral-700"
             isLoading={isLoading === 'google'}
           >
-            <FiGoogle className="w-5 h-5 mr-2" />
+            <AiOutlineGoogle className="w-5 h-5 mr-2" />
             Google
           </Button>
         </motion.div>
