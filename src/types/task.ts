@@ -46,6 +46,7 @@ export interface Task {
   timeBlock?: TimeBlock;
   recurrence?: TaskRecurrence;
   dependencies?: TaskDependency[];
+  subtasks?: Task[]; // Added subtasks property
   progress?: number; // 0-100
   tags?: string[];
   notes?: string[];

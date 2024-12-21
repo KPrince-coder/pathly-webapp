@@ -1,14 +1,119 @@
 import { Task, TimeBlock, TaskPriority } from '@/types/task';
+import { supabase } from '@/lib/supabase';
 
 interface AvailabilitySlot {
   startTime: Date;
   endTime: Date;
+  isRecurring?: boolean;
+}
+
+interface WorkingHours {
+  start: string;
+  end: string;
+  daysOfWeek: number[];
 }
 
 export class TaskScheduler {
-  private getUserAvailability(userId: string, date: Date): AvailabilitySlot[] {
-    // TODO: Fetch user's availability from database
-    return [];
+  private async getUserAvailability(userId: string, date: Date): Promise<AvailabilitySlot[]> {
+    try {
+      // Get user's working hours
+      const { data: settings, error: settingsError } = await supabase
+        .from('user_settings')
+        .select('working_hours')
+        .eq('user_id', userId)
+        .single();
+
+      if (settingsError) throw settingsError;
+
+      const workingHours: WorkingHours = settings.working_hours;
+      
+      // Get existing time blocks for the date
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data: timeBlocks, error: timeBlocksError } = await supabase
+        .from('time_blocks')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('start_time', startOfDay.toISOString())
+        .lte('end_time', endOfDay.toISOString());
+
+      if (timeBlocksError) throw timeBlocksError;
+
+      // Convert working hours to availability slots
+      const slots: AvailabilitySlot[] = [];
+      if (workingHours.daysOfWeek.includes(date.getDay())) {
+        const [startHour, startMinute] = workingHours.start.split(':').map(Number);
+        const [endHour, endMinute] = workingHours.end.split(':').map(Number);
+
+        const slotStart = new Date(date);
+        slotStart.setHours(startHour, startMinute, 0, 0);
+        const slotEnd = new Date(date);
+        slotEnd.setHours(endHour, endMinute, 0, 0);
+
+        // Remove booked time blocks from availability
+        const availableSlots = this.subtractTimeBlocks(
+          [{ startTime: slotStart, endTime: slotEnd }],
+          timeBlocks.map(block => ({
+            startTime: new Date(block.start_time),
+            endTime: new Date(block.end_time)
+          }))
+        );
+
+        slots.push(...availableSlots);
+      }
+
+      return slots;
+    } catch (error) {
+      console.error('Error fetching user availability:', error);
+      return [];
+    }
+  }
+
+  private subtractTimeBlocks(
+    availableSlots: AvailabilitySlot[],
+    bookedSlots: AvailabilitySlot[]
+  ): AvailabilitySlot[] {
+    const result: AvailabilitySlot[] = [];
+
+    for (const available of availableSlots) {
+      let current = new Date(available.startTime);
+      const slots: AvailabilitySlot[] = [];
+
+      // Sort booked slots that overlap with the available slot
+      const relevantBookings = bookedSlots
+        .filter(
+          booked =>
+            booked.startTime < available.endTime &&
+            booked.endTime > available.startTime
+        )
+        .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+      // Create available slots between bookings
+      for (const booking of relevantBookings) {
+        if (booking.startTime > current) {
+          slots.push({
+            startTime: new Date(current),
+            endTime: new Date(booking.startTime)
+          });
+        }
+        current = new Date(booking.endTime);
+      }
+
+      // Add remaining time after last booking
+      if (current < available.endTime) {
+        slots.push({
+          startTime: new Date(current),
+          endTime: new Date(available.endTime)
+        });
+      }
+
+      result.push(...slots);
+    }
+
+    return result;
   }
 
   private calculateTaskPriorityScore(task: Task): number {
@@ -16,7 +121,7 @@ export class TaskScheduler {
     const deadline = task.deadline ? new Date(task.deadline) : null;
     let score = 0;
 
-    // Priority score
+    // Priority base score
     switch (task.priority) {
       case 'high':
         score += 100;
@@ -29,97 +134,109 @@ export class TaskScheduler {
         break;
     }
 
-    // Deadline score
+    // Deadline factor
     if (deadline) {
-      const daysUntilDeadline = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      score += Math.max(0, 100 - daysUntilDeadline * 2); // Higher score for closer deadlines
+      const hoursUntilDeadline = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+      if (hoursUntilDeadline <= 24) {
+        score += 100;
+      } else if (hoursUntilDeadline <= 72) {
+        score += 50;
+      } else if (hoursUntilDeadline <= 168) {
+        score += 25;
+      }
     }
 
-    // Dependencies score
-    if (task.dependencies && task.dependencies.length > 0) {
-      score += 25; // Prioritize tasks with dependencies to unblock other tasks
+    // Dependencies factor
+    if (task.dependencies?.length) {
+      score += 25;
+    }
+
+    // Duration factor (prefer shorter tasks when score is similar)
+    if (task.estimatedDuration) {
+      score += (1 / task.estimatedDuration) * 10;
     }
 
     return score;
   }
 
-  private findOptimalTimeSlot(
+  async scheduleTask(
+    userId: string,
     task: Task,
-    availableSlots: AvailabilitySlot[],
-    existingTasks: Task[]
-  ): TimeBlock | null {
-    for (const slot of availableSlots) {
-      const slotDuration = (slot.endTime.getTime() - slot.startTime.getTime()) / (1000 * 60);
-      
-      if (slotDuration >= task.estimatedDuration) {
-        // Check for conflicts with existing tasks
-        const hasConflict = existingTasks.some(existingTask => {
-          if (!existingTask.timeBlock) return false;
-          
-          return (
-            (slot.startTime >= existingTask.timeBlock.startTime && 
-             slot.startTime < existingTask.timeBlock.endTime) ||
-            (slot.endTime > existingTask.timeBlock.startTime && 
-             slot.endTime <= existingTask.timeBlock.endTime)
-          );
-        });
+    preferredDate?: Date
+  ): Promise<TimeBlock | null> {
+    try {
+      const date = preferredDate || new Date();
+      const availableSlots = await this.getUserAvailability(userId, date);
 
-        if (!hasConflict) {
-          return {
-            id: crypto.randomUUID(),
-            startTime: slot.startTime,
-            endTime: new Date(slot.startTime.getTime() + task.estimatedDuration * 60 * 1000),
-            taskId: task.id,
-            userId: task.createdBy,
-            isFocusTime: task.priority === 'high'
-          };
-        }
+      if (!availableSlots.length) {
+        throw new Error('No available time slots found');
       }
-    }
 
-    return null;
-  }
-
-  public async scheduleTask(task: Task, existingTasks: Task[]): Promise<TimeBlock | null> {
-    if (task.dependencies?.length) {
-      const uncompletedDependencies = existingTasks.filter(
-        t => task.dependencies?.includes(t.id) && t.status !== 'completed'
+      // Find best slot based on task duration and priority
+      const taskDuration = task.estimatedDuration || 30; // Default 30 minutes
+      const suitableSlots = availableSlots.filter(
+        slot =>
+          (slot.endTime.getTime() - slot.startTime.getTime()) / (1000 * 60) >=
+          taskDuration
       );
 
-      if (uncompletedDependencies.length > 0) {
-        throw new Error('Cannot schedule task: dependencies not completed');
+      if (!suitableSlots.length) {
+        throw new Error('No suitable time slots found for task duration');
       }
-    }
 
-    const availability = this.getUserAvailability(task.createdBy, new Date());
-    return this.findOptimalTimeSlot(task, availability, existingTasks);
+      // Choose the earliest suitable slot
+      const selectedSlot = suitableSlots[0];
+      const endTime = new Date(selectedSlot.startTime);
+      endTime.setMinutes(endTime.getMinutes() + taskDuration);
+
+      const timeBlock: TimeBlock = {
+        taskId: task.id,
+        userId,
+        startTime: selectedSlot.startTime,
+        endTime,
+        status: 'scheduled'
+      };
+
+      // Save time block to database
+      const { error } = await supabase
+        .from('time_blocks')
+        .insert([timeBlock]);
+
+      if (error) throw error;
+
+      return timeBlock;
+    } catch (error) {
+      console.error('Error scheduling task:', error);
+      return null;
+    }
   }
 
-  public async rescheduleTask(task: Task, existingTasks: Task[]): Promise<TimeBlock | null> {
-    // Remove the current task from existing tasks to avoid self-conflict
-    const otherTasks = existingTasks.filter(t => t.id !== task.id);
-    return this.scheduleTask(task, otherTasks);
-  }
+  async rescheduleTask(
+    userId: string,
+    taskId: string,
+    newDate: Date
+  ): Promise<TimeBlock | null> {
+    try {
+      // Get task details
+      const { data: task, error: taskError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('id', taskId)
+        .single();
 
-  public async scheduleBatch(tasks: Task[]): Promise<Map<string, TimeBlock>> {
-    const scheduledTasks = new Map<string, TimeBlock>();
-    
-    // Sort tasks by priority score
-    const sortedTasks = [...tasks].sort(
-      (a, b) => this.calculateTaskPriorityScore(b) - this.calculateTaskPriorityScore(a)
-    );
+      if (taskError) throw taskError;
 
-    for (const task of sortedTasks) {
-      const timeBlock = await this.scheduleTask(
-        task,
-        tasks.filter(t => scheduledTasks.has(t.id))
-      );
+      // Delete existing time block
+      await supabase
+        .from('time_blocks')
+        .delete()
+        .eq('task_id', taskId);
 
-      if (timeBlock) {
-        scheduledTasks.set(task.id, timeBlock);
-      }
+      // Schedule new time block
+      return await this.scheduleTask(userId, task, newDate);
+    } catch (error) {
+      console.error('Error rescheduling task:', error);
+      return null;
     }
-
-    return scheduledTasks;
   }
 }

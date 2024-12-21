@@ -51,12 +51,12 @@ const COLORS = {
   muted: 'hsl(var(--muted))',
   background: 'hsl(var(--background))',
   foreground: 'hsl(var(--foreground))',
-  completed: '#10B981',
-  inProgress: '#F59E0B',
-  todo: '#6B7280',
-  high: '#EF4444',
-  medium: '#F59E0B',
-  low: '#3B82F6'
+  completed: 'hsl(var(--success))',
+  inProgress: 'hsl(var(--warning))',
+  todo: 'hsl(var(--gray))',
+  high: 'hsl(var(--danger))',
+  medium: 'hsl(var(--warning))',
+  low: 'hsl(var(--primary))'
 };
 
 export function TaskAnalytics({ timeRange = 'week' }: TaskAnalyticsProps) {
@@ -365,398 +365,411 @@ export function TaskAnalytics({ timeRange = 'week' }: TaskAnalyticsProps) {
   }, [tasks]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Total Tasks</h3>
-          <p className="text-2xl font-bold">{filteredTasks.length}</p>
-          <div className="mt-2 text-xs text-muted-foreground">
-            In {timeRange}
-          </div>
-        </Card>
+    <div className="w-full space-y-6">
+      <Card className="p-6">
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="progress">Progress</TabsTrigger>
+            <TabsTrigger value="time">Time Analysis</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Total Tasks</h3>
+                <p className="text-2xl font-bold">{filteredTasks.length}</p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  In {timeRange}
+                </div>
+              </Card>
 
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Completion Rate</h3>
-          <p className="text-2xl font-bold">
-            {Math.round(
-              (filteredTasks.filter(t => t.status === 'completed').length /
-                filteredTasks.length) *
-                100 || 0
-            )}%
-          </p>
-          <div className="mt-2 text-xs text-muted-foreground">
-            Average completion time: {averageCompletionTime}h
-          </div>
-        </Card>
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Completion Rate</h3>
+                <p className="text-2xl font-bold">
+                  {Math.round(
+                    (filteredTasks.filter(t => t.status === 'completed').length /
+                      filteredTasks.length) *
+                      100 || 0
+                  )}%
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Average completion time: {averageCompletionTime}h
+                </div>
+              </Card>
 
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Focus Time</h3>
-          <p className="text-2xl font-bold">
-            {Math.round(
-              productivityByHour.reduce((acc, hour) => acc + hour.focusTime, 0)
-            )}h
-          </p>
-          <div className="mt-2 text-xs text-muted-foreground">
-            Total focused work time
-          </div>
-        </Card>
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Focus Time</h3>
+                <p className="text-2xl font-bold">
+                  {Math.round(
+                    productivityByHour.reduce((acc, hour) => acc + hour.focusTime, 0)
+                  )}h
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Total focused work time
+                </div>
+              </Card>
 
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">High Priority</h3>
-          <p className="text-2xl font-bold">
-            {filteredTasks.filter(t => t.priority === 'high').length}
-          </p>
-          <div className="mt-2 text-xs text-muted-foreground">
-            Tasks requiring attention
-          </div>
-        </Card>
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">High Priority</h3>
+                <p className="text-2xl font-bold">
+                  {filteredTasks.filter(t => t.priority === 'high').length}
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Tasks requiring attention
+                </div>
+              </Card>
 
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Task Efficiency</h3>
-          <p className="text-2xl font-bold">{taskEfficiency}%</p>
-          <div className="mt-2 text-xs text-muted-foreground">
-            Estimated vs actual time
-          </div>
-        </Card>
-      </div>
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Task Efficiency</h3>
+                <p className="text-2xl font-bold">{taskEfficiency}%</p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Estimated vs actual time
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+          <TabsContent value="progress">
+            <TaskInsights />
+          </TabsContent>
+          <TabsContent value="time">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="p-4">
+                <h3 className="text-lg font-medium mb-4">Task Status Distribution</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={tasksByStatus}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {tasksByStatus.map((entry, index) => (
+                          <Cell
+                            key={entry.name}
+                            fill={
+                              entry.name === 'completed'
+                                ? COLORS.completed
+                                : entry.name === 'in-progress'
+                                ? COLORS.inProgress
+                                : COLORS.todo
+                            }
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
 
-      <TaskInsights />
+              <Card className="p-4">
+                <h3 className="text-lg font-medium mb-4">Priority Distribution</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={tasksByPriority}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {tasksByPriority.map((entry, index) => (
+                          <Cell
+                            key={entry.name}
+                            fill={
+                              entry.name === 'high'
+                                ? COLORS.high
+                                : entry.name === 'medium'
+                                ? COLORS.medium
+                                : COLORS.low
+                            }
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Task Status Distribution</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={tasksByStatus}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {tasksByStatus.map((entry, index) => (
-                    <Cell
-                      key={entry.name}
-                      fill={
-                        entry.name === 'completed'
-                          ? COLORS.completed
-                          : entry.name === 'in-progress'
-                          ? COLORS.inProgress
-                          : COLORS.todo
-                      }
-                    />
+              <Card className="p-4">
+                <h3 className="text-lg font-medium mb-4">Task Completion Trend</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={completionTrend}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="completed"
+                        stroke={COLORS.completed}
+                        activeDot={{ r: 8 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="created"
+                        stroke={COLORS.primary}
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <h3 className="text-lg font-medium mb-4">Productivity by Hour</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={productivityByHour}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hour" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="tasks" fill={COLORS.primary} />
+                      <Bar dataKey="focusTime" fill={COLORS.accent} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <h3 className="text-lg font-medium mb-4">Task Velocity</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={taskVelocity}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="velocity"
+                        stroke={COLORS.accent}
+                        activeDot={{ r: 8 }}
+                        name="Velocity Score"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <h3 className="text-lg font-medium mb-4">Weekly Workload Distribution</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={workloadDistribution}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis unit="h" />
+                      <Tooltip />
+                      <Legend />
+                      <Bar
+                        dataKey="hours"
+                        fill={COLORS.primary}
+                        name="Working Hours"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+          <TabsContent value="categories">
+            <Card className="p-4">
+              <h3 className="text-lg font-medium mb-4">Popular Tags</h3>
+              <ScrollArea className="h-[100px]">
+                <div className="flex flex-wrap gap-2">
+                  {taskTags.map(({ tag, count }) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="text-sm"
+                    >
+                      #{tag}
+                      <span className="ml-1 text-muted-foreground">({count})</span>
+                    </Badge>
                   ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Priority Distribution</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={tasksByPriority}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {tasksByPriority.map((entry, index) => (
-                    <Cell
-                      key={entry.name}
-                      fill={
-                        entry.name === 'high'
-                          ? COLORS.high
-                          : entry.name === 'medium'
-                          ? COLORS.medium
-                          : COLORS.low
-                      }
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Task Completion Trend</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={completionTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="completed"
-                  stroke={COLORS.completed}
-                  activeDot={{ r: 8 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="created"
-                  stroke={COLORS.primary}
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Productivity by Hour</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={productivityByHour}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="tasks" fill={COLORS.primary} />
-                <Bar dataKey="focusTime" fill={COLORS.accent} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Task Velocity</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={taskVelocity}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="velocity"
-                  stroke={COLORS.accent}
-                  activeDot={{ r: 8 }}
-                  name="Velocity Score"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Weekly Workload Distribution</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={workloadDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis unit="h" />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="hours"
-                  fill={COLORS.primary}
-                  name="Working Hours"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      <Card className="p-4">
-        <h3 className="text-lg font-medium mb-4">Popular Tags</h3>
-        <ScrollArea className="h-[100px]">
-          <div className="flex flex-wrap gap-2">
-            {taskTags.map(({ tag, count }) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="text-sm"
-              >
-                #{tag}
-                <span className="ml-1 text-muted-foreground">({count})</span>
-              </Badge>
-            ))}
-          </div>
-        </ScrollArea>
-      </Card>
-
-      <Card className="p-4">
-        <h3 className="text-lg font-medium mb-4">Task Breakdown</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">By Priority</h4>
-            <div className="space-y-2">
-              {tasksByPriority.map(({ name, value }) => (
-                <div key={name} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div
-                      className={cn(
-                        'w-2 h-2 rounded-full mr-2',
-                        name === 'high' && 'bg-red-500',
-                        name === 'medium' && 'bg-yellow-500',
-                        name === 'low' && 'bg-blue-500'
-                      )}
-                    />
-                    <span className="capitalize">{name}</span>
-                  </div>
-                  <span>{value}</span>
                 </div>
-              ))}
-            </div>
-          </div>
+              </ScrollArea>
+            </Card>
 
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">By Status</h4>
-            <div className="space-y-2">
-              {tasksByStatus.map(({ name, value }) => (
-                <div key={name} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div
-                      className={cn(
-                        'w-2 h-2 rounded-full mr-2',
-                        name === 'completed' && 'bg-green-500',
-                        name === 'in-progress' && 'bg-yellow-500',
-                        name === 'todo' && 'bg-gray-500'
-                      )}
-                    />
-                    <span className="capitalize">{name.replace('-', ' ')}</span>
-                  </div>
-                  <span>{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">Time Distribution</h4>
-            <div className="space-y-2">
-              {productivityByHour
-                .filter(hour => hour.tasks > 0)
-                .slice(0, 5)
-                .map(hour => (
-                  <div key={hour.hour} className="flex items-center justify-between">
-                    <span>{hour.hour}</span>
-                    <div className="flex items-center space-x-2">
-                      <span>{hour.tasks} tasks</span>
-                      <span className="text-muted-foreground">
-                        ({hour.focusTime}h focus)
-                      </span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Task Success Predictions</h3>
-          <ScrollArea className="h-[300px]">
-            <div className="space-y-4">
-              {mlInsights.taskPredictions.slice(0, 5).map(({ task, completionLikelihood }) => (
-                <div
-                  key={task.id}
-                  className="flex items-center justify-between"
-                >
-                  <div>
-                    <h4 className="font-medium">{task.title}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {task.estimatedDuration
-                        ? `${task.estimatedDuration} min estimated`
-                        : 'No duration set'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold">
-                      {Math.round(completionLikelihood)}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Success Rate
-                    </div>
+            <Card className="p-4">
+              <h3 className="text-lg font-medium mb-4">Task Breakdown</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">By Priority</h4>
+                  <div className="space-y-2">
+                    {tasksByPriority.map(({ name, value }) => (
+                      <div key={name} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div
+                            className={cn(
+                              'w-2 h-2 rounded-full mr-2',
+                              name === 'high' && 'bg-red-500',
+                              name === 'medium' && 'bg-yellow-500',
+                              name === 'low' && 'bg-blue-500'
+                            )}
+                          />
+                          <span className="capitalize">{name}</span>
+                        </div>
+                        <span>{value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </Card>
 
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Productivity Analysis</h3>
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                Peak Performance Hours
-              </h4>
-              <div className="space-y-2">
-                {mlInsights.productivityInsights
-                  .sort((a, b) => b.efficiency - a.efficiency)
-                  .slice(0, 3)
-                  .map(insight => (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">By Status</h4>
+                  <div className="space-y-2">
+                    {tasksByStatus.map(({ name, value }) => (
+                      <div key={name} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div
+                            className={cn(
+                              'w-2 h-2 rounded-full mr-2',
+                              name === 'completed' && 'bg-green-500',
+                              name === 'in-progress' && 'bg-yellow-500',
+                              name === 'todo' && 'bg-gray-500'
+                            )}
+                          />
+                          <span className="capitalize">{name.replace('-', ' ')}</span>
+                        </div>
+                        <span>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Time Distribution</h4>
+                  <div className="space-y-2">
+                    {productivityByHour
+                      .filter(hour => hour.tasks > 0)
+                      .slice(0, 5)
+                      .map(hour => (
+                        <div key={hour.hour} className="flex items-center justify-between">
+                          <span>{hour.hour}</span>
+                          <div className="flex items-center space-x-2">
+                            <span>{hour.tasks} tasks</span>
+                            <span className="text-muted-foreground">
+                              ({hour.focusTime}h focus)
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-4">
+              <h3 className="text-lg font-medium mb-4">Task Success Predictions</h3>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-4">
+                  {mlInsights.taskPredictions.slice(0, 5).map(({ task, completionLikelihood }) => (
                     <div
-                      key={insight.hour}
+                      key={task.id}
                       className="flex items-center justify-between"
                     >
-                      <span>
-                        {format(new Date().setHours(insight.hour), 'ha')}
-                      </span>
-                      <div className="flex items-center space-x-4">
-                        <span>{Math.round(insight.efficiency * 100)}% efficiency</span>
-                        <span className="text-muted-foreground">
-                          ({insight.taskCount} tasks)
-                        </span>
+                      <div>
+                        <h4 className="font-medium">{task.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {task.estimatedDuration
+                            ? `${task.estimatedDuration} min estimated`
+                            : 'No duration set'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold">
+                          {Math.round(completionLikelihood)}%
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Success Rate
+                        </div>
                       </div>
                     </div>
                   ))}
-              </div>
-            </div>
+                </div>
+              </ScrollArea>
+            </Card>
 
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                Burnout Risk Assessment
-              </h4>
-              <div className="relative pt-2">
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <div
-                    className={cn(
-                      'h-full transition-all duration-500',
-                      mlInsights.burnoutRisk > 75
-                        ? 'bg-red-500'
-                        : mlInsights.burnoutRisk > 50
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
-                    )}
-                    style={{ width: `${mlInsights.burnoutRisk}%` }}
-                  />
+            <Card className="p-4">
+              <h3 className="text-lg font-medium mb-4">Productivity Analysis</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                    Peak Performance Hours
+                  </h4>
+                  <div className="space-y-2">
+                    {mlInsights.productivityInsights
+                      .sort((a, b) => b.efficiency - a.efficiency)
+                      .slice(0, 3)
+                      .map(insight => (
+                        <div
+                          key={insight.hour}
+                          className="flex items-center justify-between"
+                        >
+                          <span>
+                            {format(new Date().setHours(insight.hour), 'ha')}
+                          </span>
+                          <div className="flex items-center space-x-4">
+                            <span>{Math.round(insight.efficiency * 100)}% efficiency</span>
+                            <span className="text-muted-foreground">
+                              ({insight.taskCount} tasks)
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
                 </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span>Low Risk</span>
-                  <span className="font-medium">
-                    {mlInsights.burnoutRisk}%
-                  </span>
-                  <span>High Risk</span>
+
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                    Burnout Risk Assessment
+                  </h4>
+                  <div className="relative pt-2">
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          'h-full transition-all duration-500',
+                          mlInsights.burnoutRisk > 75
+                            ? 'bg-red-500'
+                            : mlInsights.burnoutRisk > 50
+                            ? 'bg-yellow-500'
+                            : 'bg-green-500'
+                        )}
+                        style={{ width: `${mlInsights.burnoutRisk}%` }}
+                      />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-sm">
+                      <span>Low Risk</span>
+                      <span className="font-medium">
+                        {mlInsights.burnoutRisk}%
+                      </span>
+                      <span>High Risk</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </Card>
-      </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </Card>
 
       <TaskRecommendations />
     </div>
