@@ -268,12 +268,27 @@ CREATE POLICY "Mentees can create mentorship requests"
 
 CREATE POLICY "Both mentor and mentee can update mentorship status"
     ON vision_mentorships FOR UPDATE
-    USING (auth.uid() IN (mentor_id, mentee_id))
+    USING (
+        auth.uid() IN (mentor_id, mentee_id)
+        AND EXISTS (
+            SELECT 1
+            FROM vision_mentorships current
+            WHERE current.id = vision_mentorships.id
+            AND current.mentor_id = vision_mentorships.mentor_id
+            AND current.mentee_id = vision_mentorships.mentee_id
+            AND current.vision_goal_id = vision_mentorships.vision_goal_id
+        )
+    )
     WITH CHECK (
         auth.uid() IN (mentor_id, mentee_id)
-        AND NEW.mentor_id = OLD.mentor_id
-        AND NEW.mentee_id = OLD.mentee_id
-        AND NEW.vision_goal_id = OLD.vision_goal_id
+        AND EXISTS (
+            SELECT 1
+            FROM vision_mentorships current
+            WHERE current.id = vision_mentorships.id
+            AND current.mentor_id = vision_mentorships.mentor_id
+            AND current.mentee_id = vision_mentorships.mentee_id
+            AND current.vision_goal_id = vision_mentorships.vision_goal_id
+        )
     );
 
 CREATE POLICY "Both mentor and mentee can end mentorship"
