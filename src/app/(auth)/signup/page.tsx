@@ -23,6 +23,12 @@ export default function SignUpPage() {
   const { signUp, isLoading, error: authError } = useAuth();
   const { success, error: showError } = useNotification();
 
+  const validateEmail = (email: string) => {
+    // Basic email validation regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -33,6 +39,24 @@ export default function SignUpPage() {
 
     if (!email || !password || !name) {
       showError("All fields are required");
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      showError("Please enter a valid email address");
+      return;
+    }
+
+    // Validate password
+    if (password.length < 6) {
+      showError("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Validate name
+    if (name.trim().length < 2) {
+      showError("Please enter your full name");
       return;
     }
 

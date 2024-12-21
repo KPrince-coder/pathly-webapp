@@ -72,7 +72,7 @@ export function useAuth() {
         
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         const { error } = await supabase.auth.signUp({
-          email,
+          email: email.toLowerCase().trim(),
           password,
           options: {
             data: {
@@ -86,6 +86,9 @@ export function useAuth() {
         if (error) {
           if (error.status === 429) {
             throw new Error('Too many signup attempts. Please try again in a few minutes.');
+          }
+          if (error.message.includes('invalid')) {
+            throw new Error('Please enter a valid email address');
           }
           console.error('Signup error:', error);
           throw error;
