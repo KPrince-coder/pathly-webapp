@@ -47,6 +47,25 @@ CREATE POLICY "Workspace admins can update workspace details"
             AND user_id = auth.uid()
             AND role = 'admin'
         )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM workspace_members
+            WHERE workspace_id = workspaces.id
+            AND user_id = auth.uid()
+            AND role = 'admin'
+        )
+    );
+
+CREATE POLICY "Only workspace admins can delete workspaces"
+    ON workspaces FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM workspace_members
+            WHERE workspace_id = workspaces.id
+            AND user_id = auth.uid()
+            AND role = 'admin'
+        )
     );
 
 -- Create workspace_members policies
@@ -60,9 +79,9 @@ CREATE POLICY "Users can view members of their workspaces"
         )
     );
 
-CREATE POLICY "Workspace admins can manage members"
-    ON workspace_members FOR ALL
-    USING (
+CREATE POLICY "Only workspace admins can add members"
+    ON workspace_members FOR INSERT
+    WITH CHECK (
         EXISTS (
             SELECT 1 FROM workspace_members
             WHERE workspace_id = workspace_members.workspace_id
@@ -70,6 +89,58 @@ CREATE POLICY "Workspace admins can manage members"
             AND role = 'admin'
         )
     );
+
+CREATE POLICY "Only workspace admins can update member roles"
+    ON workspace_members FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM workspace_members
+            WHERE workspace_id = workspace_members.workspace_id
+            AND user_id = auth.uid()
+            AND role = 'admin'
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM workspace_members
+            WHERE workspace_id = workspace_members.workspace_id
+            AND user_id = auth.uid()
+            AND role = 'admin'
+        )
+    );
+
+CREATE POLICY "Members can update their own status"
+    ON workspace_members FOR UPDATE
+    USING (
+        auth.uid() = user_id 
+        AND NEW.status IS DISTINCT FROM OLD.status
+        AND NEW.role IS NOT DISTINCT FROM OLD.role
+    )
+    WITH CHECK (
+        auth.uid() = user_id 
+        AND NEW.status IS DISTINCT FROM OLD.status
+        AND NEW.role IS NOT DISTINCT FROM OLD.role
+    );
+
+CREATE POLICY "Only workspace admins can remove members"
+    ON workspace_members FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM workspace_members
+            WHERE workspace_id = workspace_members.workspace_id
+            AND user_id = auth.uid()
+            AND role = 'admin'
+        )
+        OR auth.uid() = user_id  -- Allow users to remove themselves
+    );
+
+-- Add security constraints
+ALTER TABLE workspaces
+    ADD CONSTRAINT valid_workspace_name CHECK (length(name) >= 3);
+
+ALTER TABLE workspace_members
+    ADD CONSTRAINT valid_member_role CHECK (role IN ('admin', 'member')),
+    ADD CONSTRAINT valid_member_status CHECK (status IN ('online', 'offline', 'away'));
 
 -- Function to automatically add creator as admin
 CREATE OR REPLACE FUNCTION public.handle_new_workspace()

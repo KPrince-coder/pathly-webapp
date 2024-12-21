@@ -73,8 +73,8 @@ ALTER TABLE task_dependencies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE time_blocks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_recurrence ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
-CREATE POLICY "Users can view tasks they have access to"
+-- RLS Policies for tasks
+CREATE POLICY "Users can view assigned or workspace tasks"
     ON tasks FOR SELECT
     USING (
         auth.uid() IN (created_by, assigned_to)
@@ -85,8 +85,43 @@ CREATE POLICY "Users can view tasks they have access to"
         )
     );
 
-CREATE POLICY "Users can manage tasks they created"
-    ON tasks FOR ALL
+CREATE POLICY "Users can create tasks in their workspaces"
+    ON tasks FOR INSERT
+    WITH CHECK (
+        auth.uid() = created_by
+        AND (
+            workspace_id IS NULL
+            OR EXISTS (
+                SELECT 1 FROM workspace_members
+                WHERE workspace_id = tasks.workspace_id
+                AND user_id = auth.uid()
+            )
+        )
+    );
+
+CREATE POLICY "Task creators and assignees can update tasks"
+    ON tasks FOR UPDATE
+    USING (
+        auth.uid() IN (created_by, assigned_to)
+        OR EXISTS (
+            SELECT 1 FROM workspace_members
+            WHERE workspace_id = tasks.workspace_id
+            AND user_id = auth.uid()
+            AND role = 'admin'
+        )
+    )
+    WITH CHECK (
+        auth.uid() IN (created_by, assigned_to)
+        OR EXISTS (
+            SELECT 1 FROM workspace_members
+            WHERE workspace_id = tasks.workspace_id
+            AND user_id = auth.uid()
+            AND role = 'admin'
+        )
+    );
+
+CREATE POLICY "Only creators and workspace admins can delete tasks"
+    ON tasks FOR DELETE
     USING (
         auth.uid() = created_by
         OR EXISTS (
@@ -97,26 +132,136 @@ CREATE POLICY "Users can manage tasks they created"
         )
     );
 
-CREATE POLICY "Users can manage task dependencies they have access to"
-    ON task_dependencies FOR ALL
+-- RLS Policies for task_dependencies
+CREATE POLICY "Users can view dependencies of accessible tasks"
+    ON task_dependencies FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM tasks
+            WHERE id IN (task_dependencies.task_id, task_dependencies.depends_on_task_id)
+            AND (
+                created_by = auth.uid()
+                OR assigned_to = auth.uid()
+                OR EXISTS (
+                    SELECT 1 FROM workspace_members
+                    WHERE workspace_id = tasks.workspace_id
+                    AND user_id = auth.uid()
+                )
+            )
+        )
+    );
+
+CREATE POLICY "Task creators can manage dependencies"
+    ON task_dependencies FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM tasks
+            WHERE id = task_dependencies.task_id
+            AND created_by = auth.uid()
+        )
+    );
+
+CREATE POLICY "Task creators can update dependencies"
+    ON task_dependencies FOR UPDATE
     USING (
         EXISTS (
             SELECT 1 FROM tasks
             WHERE id = task_dependencies.task_id
+            AND created_by = auth.uid()
+        )
+    );
+
+CREATE POLICY "Task creators can delete dependencies"
+    ON task_dependencies FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM tasks
+            WHERE id = task_dependencies.task_id
+            AND created_by = auth.uid()
+        )
+    );
+
+-- RLS Policies for time_blocks
+CREATE POLICY "Users can view their own time blocks"
+    ON time_blocks FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own time blocks"
+    ON time_blocks FOR INSERT
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (
+            SELECT 1 FROM tasks
+            WHERE id = time_blocks.task_id
+            AND (
+                created_by = auth.uid()
+                OR assigned_to = auth.uid()
+            )
+        )
+    );
+
+CREATE POLICY "Users can update their own time blocks"
+    ON time_blocks FOR UPDATE
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own time blocks"
+    ON time_blocks FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- RLS Policies for task_recurrence
+CREATE POLICY "Users can view recurrence for their tasks"
+    ON task_recurrence FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM tasks
+            WHERE id = task_recurrence.task_id
             AND (created_by = auth.uid() OR assigned_to = auth.uid())
         )
     );
 
-CREATE POLICY "Users can manage their time blocks"
-    ON time_blocks FOR ALL
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can manage task recurrence for their tasks"
+CREATE POLICY "Task creators can manage recurrence"
     ON task_recurrence FOR ALL
     USING (
         EXISTS (
             SELECT 1 FROM tasks
             WHERE id = task_recurrence.task_id
             AND created_by = auth.uid()
+        )
+    );
+
+-- Add security constraints
+ALTER TABLE tasks
+    ADD CONSTRAINT valid_task_title CHECK (length(title) >= 3),
+    ADD CONSTRAINT valid_task_progress CHECK (progress BETWEEN 0 AND 100),
+    ADD CONSTRAINT valid_task_duration CHECK (
+        (estimated_duration IS NULL OR estimated_duration > 0)
+        AND (actual_duration IS NULL OR actual_duration > 0)
+    ),
+    ADD CONSTRAINT valid_task_dates CHECK (
+        (deadline IS NULL OR deadline > created_at)
+        AND (completed_at IS NULL OR completed_at >= created_at)
+    );
+
+ALTER TABLE time_blocks
+    ADD CONSTRAINT valid_time_block_duration CHECK (
+        extract(epoch from (end_time - start_time))/60 >= 5
+    );
+
+ALTER TABLE task_recurrence
+    ADD CONSTRAINT valid_recurrence_interval CHECK (interval > 0),
+    ADD CONSTRAINT valid_month_day CHECK (
+        month_day IS NULL 
+        OR (month_day >= 1 AND month_day <= 31)
+    ),
+    ADD CONSTRAINT valid_weekdays CHECK (
+        weekdays IS NULL 
+        OR (
+            array_length(weekdays, 1) > 0 
+            AND array_length(weekdays, 1) <= 7
+            AND NOT EXISTS (
+                SELECT unnest(weekdays) day 
+                WHERE day NOT BETWEEN 1 AND 7
+            )
         )
     );

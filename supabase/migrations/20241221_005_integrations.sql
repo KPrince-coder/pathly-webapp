@@ -67,26 +67,97 @@ ALTER TABLE calendar_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_integrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE emails ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
-CREATE POLICY "Users can manage their calendar integrations"
-    ON calendar_integrations FOR ALL
+-- RLS Policies for calendar_integrations
+CREATE POLICY "Users can view their calendar integrations"
+    ON calendar_integrations FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their calendar integrations"
+    ON calendar_integrations FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their calendar integrations"
+    ON calendar_integrations FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can manage their calendar events"
-    ON calendar_events FOR ALL
+CREATE POLICY "Users can delete their calendar integrations"
+    ON calendar_integrations FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- RLS Policies for calendar_events
+CREATE POLICY "Users can view their calendar events"
+    ON calendar_events FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their calendar events"
+    ON calendar_events FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their calendar events"
+    ON calendar_events FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can manage their email integrations"
-    ON email_integrations FOR ALL
+CREATE POLICY "Users can delete their calendar events"
+    ON calendar_events FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- RLS Policies for email_integrations
+CREATE POLICY "Users can view their email integrations"
+    ON email_integrations FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their email integrations"
+    ON email_integrations FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their email integrations"
+    ON email_integrations FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can manage their emails"
-    ON emails FOR ALL
+CREATE POLICY "Users can delete their email integrations"
+    ON email_integrations FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- RLS Policies for emails
+CREATE POLICY "Users can view their emails"
+    ON emails FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their email records"
+    ON emails FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their email records"
+    ON emails FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their email records"
+    ON emails FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- Add security constraints
+ALTER TABLE calendar_integrations
+    ADD CONSTRAINT valid_calendar_provider CHECK (provider IN ('google', 'outlook', 'apple')),
+    ADD CONSTRAINT valid_calendar_status CHECK (status IN ('active', 'inactive', 'error', 'pending'));
+
+ALTER TABLE calendar_events
+    ADD CONSTRAINT valid_event_title CHECK (length(title) >= 1),
+    ADD CONSTRAINT valid_event_time CHECK (end_time > start_time);
+
+ALTER TABLE email_integrations
+    ADD CONSTRAINT valid_email_provider CHECK (provider IN ('gmail', 'outlook', 'yahoo')),
+    ADD CONSTRAINT valid_email_status CHECK (status IN ('active', 'inactive', 'error', 'pending'));
+
+ALTER TABLE emails
+    ADD CONSTRAINT valid_email_subject CHECK (subject IS NULL OR length(subject) >= 1),
+    ADD CONSTRAINT valid_email_addresses CHECK (
+        from_address ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+        AND (to_addresses->>'email')::text ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    );
 
 -- Indexes
 CREATE INDEX idx_calendar_events_user_time ON calendar_events(user_id, start_time);

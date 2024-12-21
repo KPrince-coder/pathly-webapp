@@ -30,9 +30,14 @@ CREATE POLICY "Users can insert their own profile."
     ON profiles FOR INSERT
     WITH CHECK ( auth.uid() = id );
 
-CREATE POLICY "Users can update their own profile."
+CREATE POLICY "Users can update own profile."
     ON profiles FOR UPDATE
-    USING ( auth.uid() = id );
+    USING ( auth.uid() = id )
+    WITH CHECK ( auth.uid() = id );
+
+CREATE POLICY "Users can't delete profiles."
+    ON profiles FOR DELETE
+    USING ( false );
 
 -- Function to handle new user creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -71,13 +76,30 @@ CREATE TABLE user_settings (
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 
 -- Create user_settings policies
-CREATE POLICY "Users can view their own settings"
+CREATE POLICY "Users can view their own settings only"
     ON user_settings FOR SELECT
-    USING (auth.uid() = user_id);
+    USING ( auth.uid() = user_id );
 
-CREATE POLICY "Users can update their own settings"
+CREATE POLICY "Users can insert their own settings"
+    ON user_settings FOR INSERT
+    WITH CHECK ( auth.uid() = user_id );
+
+CREATE POLICY "Users can update their own settings only"
     ON user_settings FOR UPDATE
-    USING (auth.uid() = user_id);
+    USING ( auth.uid() = user_id )
+    WITH CHECK ( auth.uid() = user_id );
+
+CREATE POLICY "Users can't delete settings"
+    ON user_settings FOR DELETE
+    USING ( false );
+
+-- Add security for sensitive fields
+ALTER TABLE profiles 
+    ADD CONSTRAINT valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    ADD CONSTRAINT valid_username CHECK (length(username) >= 3);
+
+ALTER TABLE user_settings
+    ADD CONSTRAINT valid_timezone CHECK (time_zone ~ '^[A-Za-z_/]+$');
 
 -- Function to handle user settings creation
 CREATE OR REPLACE FUNCTION public.handle_new_user_settings()

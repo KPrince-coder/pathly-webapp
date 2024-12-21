@@ -30,15 +30,91 @@ CREATE TABLE automation_logs (
 ALTER TABLE automation_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE automation_logs ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
-CREATE POLICY "Users can manage their automation rules"
-    ON automation_rules FOR ALL
+-- RLS Policies for automation_rules
+CREATE POLICY "Users can view their automation rules"
+    ON automation_rules FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their automation rules"
+    ON automation_rules FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their automation rules"
+    ON automation_rules FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+CREATE POLICY "Users can delete their automation rules"
+    ON automation_rules FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- RLS Policies for automation_logs
 CREATE POLICY "Users can view their automation logs"
     ON automation_logs FOR SELECT
     USING (auth.uid() = user_id);
+
+CREATE POLICY "System can create automation logs"
+    ON automation_logs FOR INSERT
+    WITH CHECK (
+        auth.uid() = user_id 
+        OR auth.role() = 'service_role'
+    );
+
+CREATE POLICY "No manual updates to automation logs"
+    ON automation_logs FOR UPDATE
+    USING (false);
+
+CREATE POLICY "Users can delete their old automation logs"
+    ON automation_logs FOR DELETE
+    USING (
+        auth.uid() = user_id
+        AND created_at < NOW() - INTERVAL '30 days'
+    );
+
+-- Add security constraints
+ALTER TABLE automation_rules
+    ADD CONSTRAINT valid_rule_name CHECK (length(name) >= 3),
+    ADD CONSTRAINT valid_trigger_type CHECK (
+        trigger_type IN (
+            'task_created',
+            'task_completed',
+            'goal_achieved',
+            'milestone_reached',
+            'schedule_time',
+            'email_received',
+            'calendar_event_created'
+        )
+    );
+
+ALTER TABLE automation_logs
+    ADD CONSTRAINT valid_log_status CHECK (
+        status IN ('success', 'failure', 'pending', 'cancelled')
+    );
+
+-- Add function to clean old logs
+CREATE OR REPLACE FUNCTION clean_old_automation_logs()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM automation_logs
+    WHERE created_at < NOW() - INTERVAL '30 days';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Add trigger for cleaning old logs
+CREATE OR REPLACE FUNCTION trigger_clean_old_logs()
+RETURNS trigger AS $$
+BEGIN
+    IF (SELECT COUNT(*) FROM automation_logs) > 10000 THEN
+        PERFORM clean_old_automation_logs();
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER clean_logs_trigger
+    AFTER INSERT ON automation_logs
+    FOR EACH STATEMENT
+    EXECUTE FUNCTION trigger_clean_old_logs();
 
 -- Indexes
 CREATE INDEX idx_automation_rules_user ON automation_rules(user_id);
