@@ -3,6 +3,17 @@ import { useRouter } from 'next/navigation';
 import { useSupabase } from './useSupabase';
 import { useNotification } from '@/context/NotificationContext';
 
+// Helper function to generate a unique username
+function generateUsername(email: string, name: string): string {
+  const baseUsername = name.toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]/g, '')
+    .substring(0, 15);
+    
+  const randomSuffix = Math.random().toString(36).substring(2, 6);
+  return `${baseUsername}${randomSuffix}`;
+}
+
 export function useAuth() {
   const router = useRouter();
   const { supabase } = useSupabase();
@@ -49,6 +60,16 @@ export function useAuth() {
     async (email: string, password: string, name: string) => {
       try {
         setIsLoading(true);
+        
+        // Add delay if there was a recent signup attempt
+        const lastSignupAttempt = localStorage.getItem('lastSignupAttempt');
+        if (lastSignupAttempt) {
+          const timeSinceLastAttempt = Date.now() - parseInt(lastSignupAttempt);
+          if (timeSinceLastAttempt < 60000) { // Less than 1 minute
+            throw new Error('Please wait a minute before trying again');
+          }
+        }
+        
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -61,7 +82,15 @@ export function useAuth() {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          if (error.status === 429) {
+            throw new Error('Too many signup attempts. Please try again in a few minutes.');
+          }
+          throw error;
+        }
+
+        // Store the signup attempt timestamp
+        localStorage.setItem('lastSignupAttempt', Date.now().toString());
 
         const username = generateUsername(email, name);
         const { data: { user } } = await supabase.auth.getUser();
@@ -154,20 +183,6 @@ export function useAuth() {
     },
     [supabase.auth, showError]
   );
-
-  const generateUsername = (email: string, name: string): string => {
-    // First try: use the part before @ in email
-    let username = email.split('@')[0].toLowerCase();
-    
-    // If that's too short, use the name
-    if (username.length < 3) {
-      username = name.toLowerCase().replace(/\s+/g, '');
-    }
-    
-    // Add some random numbers to make it more unique
-    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `${username}${randomSuffix}`;
-  };
 
   return {
     user,

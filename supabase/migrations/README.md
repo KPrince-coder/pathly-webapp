@@ -15,6 +15,7 @@ This directory contains the database migrations for the Pathly application. Each
 ## Security Features
 
 All tables implement:
+
 - Row Level Security (RLS) policies
 - Data validation constraints
 - Proper indexing for performance
@@ -23,16 +24,19 @@ All tables implement:
 ## Running Migrations
 
 Migrations are automatically applied when you run:
+
 ```bash
 supabase db reset
 ```
 
 To apply a specific migration:
+
 ```bash
 supabase db push
 ```
 
 To roll back all changes:
+
 ```sql
 \i supabase/migrations/20241221_000_down.sql
 ```
