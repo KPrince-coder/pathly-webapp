@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { FiPlay, FiPause, FiStop, FiSkipForward } from 'react-icons/fi/index';
+import { FiPlay, FiPause, FiStop, FiSkipForward } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
 
 interface TimerProps {

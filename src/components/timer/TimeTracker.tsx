@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { FiPlay, FiPause, FiStop, FiClock } from 'react-icons/fi';
+import { FiPlay, FiPause, FiSquare, FiClock } from 'react-icons/fi';
 import { supabase } from '@/lib/db';
 
 interface TimeTrackerProps {
@@ -150,7 +150,7 @@ export function TimeTracker({
                   Pause
                 </Button>
                 <Button variant="secondary" onClick={stopTimer}>
-                  <FiStop className="mr-1 h-4 w-4" />
+                  <FiSquare className="mr-1 h-4 w-4" />
                   Stop
                 </Button>
               </>
