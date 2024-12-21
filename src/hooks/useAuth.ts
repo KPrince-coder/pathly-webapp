@@ -70,6 +70,7 @@ export function useAuth() {
           }
         }
         
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -78,7 +79,7 @@ export function useAuth() {
               name: name.trim(),
               email_confirm: false,
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${appUrl}/auth/callback`,
           },
         });
 
@@ -86,6 +87,7 @@ export function useAuth() {
           if (error.status === 429) {
             throw new Error('Too many signup attempts. Please try again in a few minutes.');
           }
+          console.error('Signup error:', error);
           throw error;
         }
 
@@ -120,7 +122,8 @@ export function useAuth() {
 
         return true;
       } catch (error: any) {
-        showError(error.message);
+        console.error('Full signup error:', error);
+        showError(error.message || 'An error occurred during signup');
         return false;
       } finally {
         setIsLoading(false);
@@ -147,7 +150,7 @@ export function useAuth() {
       try {
         setIsLoading(true);
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/reset-password`,
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`,
         });
 
         if (error) throw error;
