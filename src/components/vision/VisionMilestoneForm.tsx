@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { FormInput } from '@/components/ui/FormInput';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { DatePicker } from '@/components/ui/DatePicker';
@@ -97,7 +97,7 @@ export function VisionMilestoneForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div>
-        <Input
+        <FormInput
           label="Milestone Title"
           {...register('title')}
           error={errors.title?.message}
@@ -109,7 +109,7 @@ export function VisionMilestoneForm({
         <Textarea
           label="Description"
           {...register('description')}
-          error={errors.description?.message}
+          error={!!errors.description?.message}
           placeholder="Describe this milestone"
         />
       </div>
@@ -134,7 +134,7 @@ export function VisionMilestoneForm({
           ]}
           value={watch('status')}
           onChange={(value) => setValue('status', value)}
-          error={errors.status?.message}
+          error={!!errors.status?.message}
         />
       </div>
 
