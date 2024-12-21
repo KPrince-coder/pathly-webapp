@@ -51,7 +51,7 @@
             letter-spacing: -0.025em;
         }
 
-        .magic-btn {
+        .signin-btn {
             display: inline-block;
             background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
             color: white;
@@ -64,27 +64,8 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .magic-btn:hover {
+        .signin-btn:hover {
             opacity: 0.9;
-        }
-
-        .info-box {
-            background-color: var(--primary-50);
-            border-radius: 0.5rem;
-            padding: 1.25rem;
-            margin: 1.5rem 0;
-            text-align: left;
-        }
-
-        .device-info {
-            display: inline-block;
-            background-color: white;
-            border-radius: 0.375rem;
-            padding: 0.5rem 1rem;
-            margin: 0.5rem 0;
-            font-size: 0.875rem;
-            color: var(--neutral-700);
-            border: 1px solid var(--neutral-100);
         }
 
         .footer {
@@ -96,7 +77,7 @@
         }
 
         .footer a {
-            color: var(--primary-500);
+            color: var(--primary-600);
             text-decoration: none;
         }
 
@@ -119,39 +100,21 @@
     <div class="container">
         <img src="{{ .LogoURL }}" alt="Pathly" class="logo">
         
-        <h2>Magic Link Sign In ✨</h2>
+        <h2>Sign in to Pathly 🔑</h2>
         
-        <p>Click the button below to sign in to your Pathly account. No password needed!</p>
+        <p>Click the button below to sign in to your account. This link will expire in 24 hours.</p>
         
-        <a href="{{ .MagicLinkURL }}" class="magic-btn">Sign In to Pathly</a>
+        <a href="{{ .SignInURL }}" class="signin-btn">Sign In to Pathly</a>
         
-        <div class="info-box">
-            <p style="margin-top: 0; color: var(--neutral-700);">
-                <strong>Sign in request details:</strong>
-            </p>
-            <div class="device-info">
-                📱 Device: {{ .DeviceInfo }}
-            </div>
-            <div class="device-info">
-                📍 Location: {{ .Location }}
-            </div>
-            <div class="device-info">
-                🌐 Browser: {{ .Browser }}
-            </div>
-            
-            <p style="font-size: 0.875rem; margin: 1rem 0 0 0; color: var(--neutral-600);">
-                If you didn't request this sign in, you can safely ignore this email.
-            </p>
-        </div>
+        <p style="font-size: 0.875rem; color: var(--neutral-500);">
+            If you didn't request this email, please ignore it or <a href="{{ .SupportURL }}" style="color: var(--primary-600);">contact our support team</a>.
+        </p>
         
         <div class="footer">
             <p>
                 &copy; {{ .CurrentYear }} Pathly | 
-                <a href="{{ .PrivacyURL }}" style="color: var(--primary-500); text-decoration: none;">Privacy Policy</a> | 
-                <a href="{{ .TermsURL }}" style="color: var(--primary-500); text-decoration: none;">Terms of Service</a>
-            </p>
-            <p style="margin-top: 0.5rem;">
-                This magic link will expire in 10 minutes and can only be used once.
+                <a href="{{ .SupportURL }}" style="color: var(--primary-600);">Support</a> | 
+                <a href="{{ .PrivacyURL }}" style="color: var(--primary-600);">Privacy Policy</a>
             </p>
         </div>
     </div>

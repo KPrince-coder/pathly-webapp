@@ -18,9 +18,8 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
-  const { signUp, isLoading, error: authError } = useAuth();
+  const { signUp, isLoading } = useAuth();
   const { success, error: showError } = useNotification();
 
   const validateEmail = (email: string) => {
@@ -31,63 +30,57 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
-    if (loading || isLoading) {
-      return;
-    }
-
-    if (!email || !password || !name) {
-      showError("All fields are required");
-      return;
-    }
-
-    // Validate email format
-    if (!validateEmail(email)) {
-      showError("Please enter a valid email address");
-      return;
-    }
-
-    // Validate password
-    if (password.length < 6) {
-      showError("Password must be at least 6 characters long");
-      return;
-    }
-
-    // Validate name
-    if (name.trim().length < 2) {
-      showError("Please enter your full name");
-      return;
-    }
-
     setLoading(true);
 
     try {
+      if (!email || !password || !name) {
+        showError("All fields are required");
+        setLoading(false);
+        return;
+      }
+
+      // Validate email format
+      if (!validateEmail(email)) {
+        showError("Please enter a valid email address");
+        setLoading(false);
+        return;
+      }
+
+      // Validate password length
+      if (password.length < 6) {
+        showError("Password must be at least 6 characters long");
+        setLoading(false);
+        return;
+      }
+
+      // Validate name
+      if (name.trim().length === 0) {
+        showError("Please enter your name");
+        setLoading(false);
+        return;
+      }
+
       const capitalizedName = capitalizeWords(name.trim());
-      console.log("Starting signup process...", {
-        email,
-        name: capitalizedName,
-      });
-
       const result = await signUp(email, password, capitalizedName);
-      console.log("Signup result:", result);
-
+      
       if (result) {
-        success(
-          "Account created successfully! Please check your email for the confirmation link."
-        );
-
-        // Redirect to login page after a short delay
+        success("Account created successfully! Please sign in to continue.");
         setTimeout(() => {
-          router.push("/login?message=check-email");
+          router.push("/login");
         }, 2000);
-      } else {
-        // If result is false, there should be an authError
-        setError(authError || "Failed to create account. Please try again.");
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      setError(error.message || "Failed to create account. Please try again.");
+      if (error.message.includes("Email already in use")) {
+        showError("Email already in use. Please try a different email address.");
+      } else {
+        showError(error.message || "Failed to create account. Please try again later.");
+      }
+      
+      // Clear all input fields on error
+      setEmail("");
+      setPassword("");
+      setName("");
     } finally {
       setLoading(false);
     }
@@ -184,11 +177,6 @@ export default function SignUpPage() {
               </button>
             </div>
 
-            {error && (
-              <div className="mt-2 text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
           </form>
 
           <p className="mt-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
