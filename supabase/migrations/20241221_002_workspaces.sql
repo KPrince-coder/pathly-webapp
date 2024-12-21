@@ -113,13 +113,23 @@ CREATE POLICY "Members can update their own status"
     ON workspace_members FOR UPDATE
     USING (
         auth.uid() = user_id 
-        AND NEW.status IS DISTINCT FROM OLD.status
-        AND NEW.role IS NOT DISTINCT FROM OLD.role
+        AND (
+            SELECT true
+            FROM workspace_members
+            WHERE workspace_id = workspace_members.workspace_id
+            AND user_id = auth.uid()
+            AND role IS NOT DISTINCT FROM workspace_members.role
+        )
     )
     WITH CHECK (
         auth.uid() = user_id 
-        AND NEW.status IS DISTINCT FROM OLD.status
-        AND NEW.role IS NOT DISTINCT FROM OLD.role
+        AND (
+            SELECT true
+            FROM workspace_members
+            WHERE workspace_id = workspace_members.workspace_id
+            AND user_id = auth.uid()
+            AND role IS NOT DISTINCT FROM workspace_members.role
+        )
     );
 
 CREATE POLICY "Only workspace admins can remove members"
