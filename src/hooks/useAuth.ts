@@ -17,7 +17,7 @@ function generateUsername(email: string, name: string): string {
 export function useAuth() {
   const router = useRouter();
   const { supabase } = useSupabase();
-  const { error: showError } = useNotification();
+  const { showNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
@@ -39,21 +39,31 @@ export function useAuth() {
       try {
         setIsLoading(true);
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.toLowerCase().trim(),
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            throw new Error('Please check your email and confirm your account before signing in');
+          }
+          if (error.message.includes('Invalid login credentials')) {
+            throw new Error('Invalid email or password');
+          }
+          throw error;
+        }
 
         router.push('/dashboard');
+        return true;
       } catch (error: any) {
-        showError(error.message);
+        console.error('Sign in error:', error);
+        showNotification(error.message || 'Failed to sign in', 'error');
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [router, supabase.auth, showError]
+    [router, supabase.auth, showNotification]
   );
 
   const signUp = useCallback(
@@ -71,7 +81,7 @@ export function useAuth() {
         }
         
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: email.toLowerCase().trim(),
           password,
           options: {
@@ -79,7 +89,7 @@ export function useAuth() {
               name: name.trim(),
               email_confirm: false,
             },
-            emailRedirectTo: `${appUrl}/auth/callback`,
+            emailRedirectTo: `${appUrl}/callback`,
           },
         });
 
@@ -90,49 +100,33 @@ export function useAuth() {
           if (error.message.includes('invalid')) {
             throw new Error('Please enter a valid email address');
           }
+          if (error.message.includes('User already registered')) {
+            throw new Error('This email is already registered. Please use a different email or sign in.');
+          }
           console.error('Signup error:', error);
           throw error;
+        }
+
+        if (!data?.user?.id) {
+          throw new Error('Signup failed - unable to create user account');
         }
 
         // Store the signup attempt timestamp
         localStorage.setItem('lastSignupAttempt', Date.now().toString());
 
-        const username = generateUsername(email, name);
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          throw new Error('User not found');
-        }
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            id: user.id,
-            username: username,
-            display_name: name.trim(),
-            bio: '',
-            avatar_type: 'default',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }]);
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Delete the auth user if profile creation fails
-          await supabase.auth.admin.deleteUser(user.id);
-          throw new Error('Database error saving new user profile. Please try again.');
-        }
+        // Show success message with email confirmation instructions
+        showNotification('Please check your email for a confirmation link to complete your registration.', 'success');
 
         return true;
       } catch (error: any) {
         console.error('Full signup error:', error);
-        showError(error.message || 'An error occurred during signup');
+        showNotification(error.message || 'An error occurred during signup', 'error');
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [supabase.auth, showError]
+    [supabase.auth, showNotification]
   );
 
   const signOut = useCallback(async () => {
@@ -142,11 +136,11 @@ export function useAuth() {
       if (error) throw error;
       router.push('/login');
     } catch (error: any) {
-      showError(error.message);
+      showNotification(error.message, 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [router, supabase.auth, showError]);
+  }, [router, supabase.auth, showNotification]);
 
   const resetPassword = useCallback(
     async (email: string) => {
@@ -160,13 +154,13 @@ export function useAuth() {
 
         return true;
       } catch (error: any) {
-        showError(error.message);
+        showNotification(error.message, 'error');
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [supabase.auth, showError]
+    [supabase.auth, showNotification]
   );
 
   const updatePassword = useCallback(
@@ -181,13 +175,13 @@ export function useAuth() {
 
         return true;
       } catch (error: any) {
-        showError(error.message);
+        showNotification(error.message, 'error');
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [supabase.auth, showError]
+    [supabase.auth, showNotification]
   );
 
   return {
