@@ -1,88 +1,42 @@
 'use client';
 
-import React, { createContext, useContext } from 'react';
-import { toast, ToastOptions } from 'react-toastify';
+import React, { createContext, useContext, useCallback } from 'react';
+import { toast, type ToastT } from 'sonner';
 import { FiCheck, FiX, FiInfo, FiAlertTriangle } from 'react-icons/fi';
 
 interface NotificationContextType {
-  success: (message: string, options?: ToastOptions) => void;
-  error: (message: string, options?: ToastOptions) => void;
-  info: (message: string, options?: ToastOptions) => void;
-  warning: (message: string, options?: ToastOptions) => void;
+  showNotification: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const defaultOptions: ToastOptions = {
-  position: 'bottom-right',
-  autoClose: 5000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-  theme: 'colored',
-};
-
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const success = (message: string, options?: ToastOptions) => {
-    toast.success(
-      <div className="flex items-center gap-2">
-        <FiCheck className="h-5 w-5" />
-        <span>{message}</span>
-      </div>,
-      {
-        ...defaultOptions,
-        className: 'bg-success-500 dark:bg-success-600',
-        ...options,
-      }
-    );
-  };
+  const showNotification = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    const options: Partial<ToastT> = {
+      icon: type === 'success' ? <FiCheck className="text-green-500" /> :
+            type === 'error' ? <FiX className="text-red-500" /> :
+            type === 'warning' ? <FiAlertTriangle className="text-yellow-500" /> :
+            <FiInfo className="text-blue-500" />,
+      duration: 4000,
+    };
 
-  const error = (message: string, options?: ToastOptions) => {
-    toast.error(
-      <div className="flex items-center gap-2">
-        <FiX className="h-5 w-5" />
-        <span>{message}</span>
-      </div>,
-      {
-        ...defaultOptions,
-        className: 'bg-error-500 dark:bg-error-600',
-        ...options,
-      }
-    );
-  };
-
-  const info = (message: string, options?: ToastOptions) => {
-    toast.info(
-      <div className="flex items-center gap-2">
-        <FiInfo className="h-5 w-5" />
-        <span>{message}</span>
-      </div>,
-      {
-        ...defaultOptions,
-        className: 'bg-info-500 dark:bg-info-600',
-        ...options,
-      }
-    );
-  };
-
-  const warning = (message: string, options?: ToastOptions) => {
-    toast.warning(
-      <div className="flex items-center gap-2">
-        <FiAlertTriangle className="h-5 w-5" />
-        <span>{message}</span>
-      </div>,
-      {
-        ...defaultOptions,
-        className: 'bg-warning-500 dark:bg-warning-600',
-        ...options,
-      }
-    );
-  };
+    switch (type) {
+      case 'success':
+        toast.success(message, options);
+        break;
+      case 'error':
+        toast.error(message, options);
+        break;
+      case 'warning':
+        toast.warning(message, options);
+        break;
+      default:
+        toast.info(message, options);
+    }
+  }, []);
 
   return (
-    <NotificationContext.Provider value={{ success, error, info, warning }}>
+    <NotificationContext.Provider value={{ showNotification }}>
       {children}
     </NotificationContext.Provider>
   );

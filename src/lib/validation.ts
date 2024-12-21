@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+// Email validation function
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
+
 // User validation schemas
 export const userSchema = z.object({
   email: z.string().email('Invalid email address'),

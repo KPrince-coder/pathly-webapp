@@ -1,9 +1,6 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from '@/context/ThemeContext';
-import { NotificationProvider } from '@/context/NotificationContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Providers } from '@/providers/Providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,12 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <NotificationProvider>
-            {children}
-            <ToastContainer />
-          </NotificationProvider>
-        </ThemeProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
