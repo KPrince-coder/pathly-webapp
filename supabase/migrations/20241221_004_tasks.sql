@@ -259,9 +259,6 @@ ALTER TABLE task_recurrence
         OR (
             array_length(weekdays, 1) > 0 
             AND array_length(weekdays, 1) <= 7
-            AND NOT EXISTS (
-                SELECT unnest(weekdays) day 
-                WHERE day NOT BETWEEN 1 AND 7
-            )
+            AND weekdays <@ ARRAY[1,2,3,4,5,6,7]
         )
     );
